@@ -10,8 +10,14 @@ def display_image(window_name, img):
     img_value = cv.imread("bonn.png")
     cv.imshow(window_name, img_value)
     cv.waitKey(0)
-    cv.destroyAllWindows() 
+    # cv.destroyAllWindows() 
 
+def convert_into_intensity_image(window_name, img):
+    img_value = cv.imread("bonn.png")
+    img= cv.cvtColor(img_value, cv.COLOR_BGR2GRAY )
+    cv.imshow(window_name, img) 
+    cv.waitKey(0)
+    # cv.destroyAllWindows()
 
 if __name__ == '__main__':
 
@@ -22,11 +28,11 @@ if __name__ == '__main__':
 
     display_image('2 - a - Original Image', img)
 
-    """
+    
     # 2b: display the intensity image
+    convert_into_intensity_image('2 - b - Intensity Image', img)
 
-    display_image('2 - b - Intensity Image', img_gray)
-
+    """
     # 2c: for loop to perform the operation
     display_image('2 - c - Reduced Intensity Image', img_cpy)
 
