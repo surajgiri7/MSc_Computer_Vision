@@ -14,6 +14,7 @@ def display_image(window_name, img):
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+
 # 2. Function to convert the image into intensity image and display it
 def convert_into_intensity_image(window_name, img):
     """
@@ -27,6 +28,7 @@ def convert_into_intensity_image(window_name, img):
     cv.waitKey(0)
     cv.destroyAllWindows()
 
+
 # 3. Function to multiply the imtensity of the image by 0.5 and 
 # subtract it from each color channel new (R, G, B) values are
 # (max(R - 0.5I, 0), max(G - 0.5I, 0), max(B - 0.5I, 0)).
@@ -37,6 +39,7 @@ def multiply_intensity_and_subtract_RGB(window_name, img):
 # 4. Function to perform the operation in 3. in one line
 def one_line_multiply_intensity_and_subtract_RGB(window_name, img):
     img_value = cv.imread(img)
+
 
 # 5. Function to extract a 16x16 patch from the center of the image
 # and place it randomly in the image
@@ -90,7 +93,7 @@ def rand_rect_ellipse(window_name, img):
         cv.ellipse(img, center, axes, angle, 0, 360, color, -1)  # -1 for filled ellipse
 
     # Display the img
-    cv.imshow('Shapes', img)
+    cv.imshow(window_name, img)
     cv.waitKey(0)
 
 if __name__ == '__main__':
