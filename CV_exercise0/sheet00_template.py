@@ -34,19 +34,37 @@ def convert_into_intensity_image(window_name, img):
 # (max(R - 0.5I, 0), max(G - 0.5I, 0), max(B - 0.5I, 0)).
 def multiply_intensity_and_subtract_RGB(window_name, img):
     img_value = cv.imread(img)
-    intensity_image = convert_into_intensity_image(window_name, img)
+    intensity_image = cv.cvtColor(img_value, cv.COLOR_BGR2GRAY)
     height, width, _ = img_value.shape
     print(height, width)
-    img_cpy = np.copy(intensity_image)
+    # convertign the image to three channel image
+    three_channel_img = np.stack((intensity_image,)*3, axis=-1)
     for y in range(height):
         for x in range(width):
             for c in range(3):
-                print(f"Original Intensity Value for pixel {y}, {x} ",img_value[y, x, c])
-                img_cpy[y, x, c] = max(img_value[y, x, c] - 0.5 * intensity_image[y, x], 0)
-                print("New Intensity Value: ",img_cpy[y, x, c])
-    cv.imshow(window_name, img_cpy)
+                print(f"Original Intensity Value for pixel {y}, {x} : ",img_value[y, x, c])
+                img_value[y, x, c] = max((img_value[y, x, c] - 0.5 * three_channel_img[y, x]), 0)
+                img_value[y, x, c] = max((img_value[y, x, c] - 0.5), 0)
+                print(f"New Intensity Value for {y}, {x}: ",three_channel_img[y, x, c])
+    cv.imshow(window_name, img_value)
     cv.waitKey(0)
-    cv.destroyAllWindows() 
+    cv.destroyAllWindows()
+
+
+
+
+    # img_cpy = np.copy(intensity_image)
+    # # three_channel_img = np.stack((img_cpy,)*3, axis=-1)
+    # print(three_channel_img.shape)
+    # for y in range(height):
+    #     for x in range(width):
+    #         for c in range(3):
+    #             print(f"Original Intensity Value for pixel {y}, {x} : ",img_value[y, x, c])
+    #             img_cpy[y, x, c] = max((img_value[y, x, c] - 0.5 * three_channel_img[y, x]), 0)
+    #             print("New Intensity Value: ",three_channel_img[y, x, c])
+    # cv.imshow(window_name, img_cpy)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows() 
     
     
     
