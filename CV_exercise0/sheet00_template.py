@@ -36,16 +36,14 @@ def multiply_intensity_and_subtract_RGB(window_name, img):
     img_value = cv.imread(img)
     intensity_image = cv.cvtColor(img_value, cv.COLOR_BGR2GRAY)
     height, width, _ = img_value.shape
-    print(height, width)
     # convertign the image to three channel image
-    three_channel_img = np.stack((intensity_image,)*3, axis=-1)
+    three_channel_img = np.stack((intensity_image,)*3, axis=-1) 
     for y in range(height):
         for x in range(width):
             for c in range(3):
-                print(f"Original Intensity Value for pixel {y}, {x} : ",img_value[y, x, c])
-                img_value[y, x, c] = max((img_value[y, x, c] - 0.5 * three_channel_img[y, x]), 0)
-                img_value[y, x, c] = max((img_value[y, x, c] - 0.5), 0)
-                print(f"New Intensity Value for {y}, {x}: ",three_channel_img[y, x, c])
+                intensity_value = intensity_image[y, x]
+                img_value[y, x, c] = max(img_value[y, x, c] - 0.5 * intensity_value, 0)
+
     cv.imshow(window_name, img_value)
     cv.waitKey(0)
     cv.destroyAllWindows()
@@ -134,12 +132,12 @@ if __name__ == '__main__':
     # set image path
     img = 'bonn.png'
     
-    # # 2a: read and display the image 
-    # display_image('2 - a - Original Image', img)
+    ##2a: read and display the image 
+    #display_image('2 - a - Original Image', img)
 
     
     # 2b: display the intensity image
-    convert_into_intensity_image('2 - b - Intensity Image', img)
+    #convert_into_intensity_image('2 - b - Intensity Image', img)
 
     # 2c: for loop to perform the operation
     multiply_intensity_and_subtract_RGB('2 - c - Reduced Intensity Image', img)
@@ -151,7 +149,7 @@ if __name__ == '__main__':
     # pick_random_patch('2 - e - Center Patch', img)  
 
     # # 2f: Draw random rectangles and ellipses
-    # rand_rect_ellipse('2 - f - Rectangles and Ellipses', img)
+    #rand_rect_ellipse('2 - f - Rectangles and Ellipses', img)
 
     # destroy all windows 
     cv.destroyAllWindows()
