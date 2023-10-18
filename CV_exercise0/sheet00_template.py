@@ -34,6 +34,37 @@ def convert_into_intensity_image(window_name, img):
 # (max(R - 0.5I, 0), max(G - 0.5I, 0), max(B - 0.5I, 0)).
 def multiply_intensity_and_subtract_RGB(window_name, img):
     img_value = cv.imread(img)
+    intensity_image = cv.cvtColor(img_value, cv.COLOR_BGR2GRAY)
+    height, width, _ = img_value.shape
+    # convertign the image to three channel image
+    three_channel_img = np.stack((intensity_image,)*3, axis=-1) 
+    for y in range(height):
+        for x in range(width):
+            for c in range(3):
+                intensity_value = intensity_image[y, x]
+                img_value[y, x, c] = max(img_value[y, x, c] - 0.5 * intensity_value, 0)
+
+    cv.imshow(window_name, img_value)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
+
+
+    # img_cpy = np.copy(intensity_image)
+    # # three_channel_img = np.stack((img_cpy,)*3, axis=-1)
+    # print(three_channel_img.shape)
+    # for y in range(height):
+    #     for x in range(width):
+    #         for c in range(3):
+    #             print(f"Original Intensity Value for pixel {y}, {x} : ",img_value[y, x, c])
+    #             img_cpy[y, x, c] = max((img_value[y, x, c] - 0.5 * three_channel_img[y, x]), 0)
+    #             print("New Intensity Value: ",three_channel_img[y, x, c])
+    # cv.imshow(window_name, img_cpy)
+    # cv.waitKey(0)
+    # cv.destroyAllWindows() 
+    
+    
     
 
 # 4. Function to perform the operation in 3. in one line
@@ -101,28 +132,24 @@ if __name__ == '__main__':
     # set image path
     img = 'bonn.png'
     
-    # 2a: read and display the image 
-    display_image('2 - a - Original Image', img)
+    ##2a: read and display the image 
+    #display_image('2 - a - Original Image', img)
 
     
     # 2b: display the intensity image
-    convert_into_intensity_image('2 - b - Intensity Image', img)
+    #convert_into_intensity_image('2 - b - Intensity Image', img)
 
     # 2c: for loop to perform the operation
-    # display_image('2 - c - Reduced Intensity Image', img)
+    multiply_intensity_and_subtract_RGB('2 - c - Reduced Intensity Image', img)
 
     # 2d: one-line statement to perfom the operation above
     # display_image('2 - d - Reduced Intensity Image One-Liner', img_cpy)    
 
-    # 2e: Extract the center patch and place randomly in the image
-    pick_random_patch('2 - e - Center Patch', img)  
-    
-    # Random location of the patch for placement
-    # display_image('2 - e - Center Patch Placed Random %d, %d' % (rand_coord[0], rand_coord[1]), img_cpy)
+    # # 2e: Extract the center patch and place randomly in the image
+    # pick_random_patch('2 - e - Center Patch', img)  
 
-
-    # 2f: Draw random rectangles and ellipses
-    rand_rect_ellipse('2 - f - Rectangles and Ellipses', img)
+    # # 2f: Draw random rectangles and ellipses
+    #rand_rect_ellipse('2 - f - Rectangles and Ellipses', img)
 
     # destroy all windows 
     cv.destroyAllWindows()
