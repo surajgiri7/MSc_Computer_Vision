@@ -164,7 +164,7 @@ if __name__ == "__main__":
     
     # Problem 1 b.1 display the mean grey value of the image
     mean_grey_value = compute_mean_grey_value_1(img)
-    print("Mean grey value of the image is: ", mean_grey_value)
+    print("1.b.1 Mean grey value of the image is: ", mean_grey_value)
     
     # Problem 1 b.2 display the integral image using the function integral
     integral_image_function = compute_integral_image_function(img)
