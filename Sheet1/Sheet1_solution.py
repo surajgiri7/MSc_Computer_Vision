@@ -109,7 +109,8 @@ def filter_with_gaussian(img):
 def compute_pixelwise_difference(img):
     twice_filtered_image = filter_twice_gaussian(img)
     once_filtered_image = filter_with_gaussian(img)
-    difference_image = np.abs(twice_filtered_image - once_filtered_image)
+    # difference_image = np.abs(twice_filtered_image - once_filtered_image)
+    difference_image = cv.absdiff(twice_filtered_image, once_filtered_image)
     max_pixel_error = np.max(difference_image)
     return max_pixel_error
 
