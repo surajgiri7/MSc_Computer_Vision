@@ -161,6 +161,7 @@ if __name__ == "__main__":
     integral_image = compute_integral_image(img)
     cv.imshow("Integral Image",integral_image)
     cv.waitKey(0)
+    # cv.destroyAllWindows()
     
     # Problem 1 b.1 display the mean grey value of the image
     mean_grey_value = compute_mean_grey_value_1(img)
@@ -170,13 +171,13 @@ if __name__ == "__main__":
     integral_image_function = compute_integral_image_function(img)
     cv.imshow("1.b.2 Integral Image using Function - integral",integral_image_function)
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     
     # Problem 1 b.3 display the integral image using my own function
     integral_image_own_func = compute_integral_image_own_func(img)
     cv.imshow("1.b.3 Integral Image using Own Function",integral_image_own_func)
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
 
     # Problem 2 - display the equalized image
     image = cv.imread(img)
@@ -191,25 +192,25 @@ if __name__ == "__main__":
     cv.imshow('Pixelwise Difference', pixel_diff)
     print(f"Maximum Pixel Error: {max_pixel_error}")
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     
     # Problem 5 - display the grayscale image
     grey_image = read_image_and_to_grey(img)
     cv.imshow("5. Grayscale Image", grey_image)
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     
     # Problem 5.a - display the image filtered twice with a Gaussian Kernel with sigma = 2
     filter_twice_image_gaussian = filter_twice_gaussian(img)
     cv.imshow("5.a Twice filtered Image with Gaussian kernel", filter_twice_image_gaussian)
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     
     # Problem 5.b - display the image filtered once with a Gaussian Kernel with sigma = 2 * sqrt(2)
     filter_once_image_gaussian = filter_with_gaussian(img)
     cv.imshow("5.b Once filtered Image with Gaussian kernel", filter_once_image_gaussian)
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     
     # Problem 5 - computing and printing the absolute pixelwise difference between the two filtered images
     max_pixel_error = compute_pixelwise_difference(img)
@@ -219,7 +220,7 @@ if __name__ == "__main__":
     noise_image = add_salt_and_pepper_noise(img)
     cv.imshow("7. Image with 30% salt and pepper noise", noise_image)
     cv.waitKey(0)
-    cv.destroyAllWindows()
+    # cv.destroyAllWindows()
     
     # Problem 7.a - display the image filtered with a Gaussian Kernel
     gaussian_filtered_salt_n_pepper = filter_salt_n_pepper_with_gaussian(img)
