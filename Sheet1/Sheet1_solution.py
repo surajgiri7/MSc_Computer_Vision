@@ -165,6 +165,7 @@ if __name__ == "__main__":
     # Problem 1 b.1 display the mean grey value of the image
     mean_grey_value = compute_mean_grey_value_1(img)
     print("1.b.1 Mean grey value of the image is: ", mean_grey_value)
+    cv.waitKey(0)
     
     # Problem 1 b.2 display the integral image using the function integral
     integral_image_function = compute_integral_image_function(img)
@@ -186,10 +187,13 @@ if __name__ == "__main__":
     pixel_diff = np.abs(pixel_lib - custom_lib)
     # Find the maximum pixel error
     max_pixel_error = np.max(pixel_diff) 
-    cv.imshow('Equalized Image (OpenCV)', pixel_lib)
-    cv.imshow('Equalized Image (Custom)', custom_lib)
-    cv.imshow('Pixelwise Difference', pixel_diff)
-    print(f"Maximum Pixel Error: {max_pixel_error}")
+    cv.imshow('2 Equalized Image (OpenCV)', pixel_lib)
+    cv.waitKey(0)
+    cv.imshow('2 Equalized Image (Custom)', custom_lib)
+    cv.waitKey(0)
+    cv.imshow('2 Pixelwise Difference', pixel_diff)
+    cv.waitKey(0)
+    print(f"2. Maximum Pixel Error: {max_pixel_error}")
     cv.waitKey(0)
     # cv.destroyAllWindows()
     
