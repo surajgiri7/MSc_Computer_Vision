@@ -339,7 +339,7 @@ if __name__ == "__main__":
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-    # Problem 2 - display the equalized image
+    # Problem 2 - display the equalized image  
     image = cv.imread(img)
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY) 
     pixel_lib = histogram(gray_image) 
