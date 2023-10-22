@@ -283,20 +283,17 @@ def svd(img):
     U1, s1, Vt1 = np.linalg.svd(kernel1, full_matrices=False)
     U2, s2, Vt2 = np.linalg.svd(kernel2, full_matrices=False)
 
-    # Calculate the 1D kernels
-    kernel1_h = U1[:, 0] * np.sqrt(s1[0])
-    kernel1_v = Vt1[0, :] * np.sqrt(s1[0])
-    kernel2_h = U2[:, 0] * np.sqrt(s2[0])
-    kernel2_v = Vt2[0, :] * np.sqrt(s2[0])
-
+    
+    approx_kernel1 = np.outer(U1[:, 0],Vt1[0, :])*s1[0]
+    approx_kernel2 = np.outer(U2[:, 0],Vt2[0, :])*s2[0]
     # Filter the image using the obtained 1D kernels
-    filtered_image1 = cv.filter2D(cv.filter2D(gray_image, -1, kernel1_h), -1, kernel1_v)
-    filtered_image2 = cv.filter2D(cv.filter2D(gray_image, -1, kernel2_h), -1, kernel2_v)
+    filtered_image1 = cv.filter2D(gray_image, -1, approx_kernel1)
+    filtered_image2 = cv.filter2D(gray_image, -1, approx_kernel2)
 
     # Display the original grayscale image and the filtered images
     cv.imshow('Grayscale Image', gray_image)
-    cv.imshow('Filtered Image (Kernel 1)', filtered_image1)
-    cv.imshow('Filtered Image (Kernel 2)', filtered_image2)
+    cv.imshow('Filtered Image svd (Kernel 1)', filtered_image1)
+    cv.imshow('Filtered Image svd(Kernel 2)', filtered_image2)
 
     # Wait for a key press and then close the image windows
     cv.waitKey(0)
