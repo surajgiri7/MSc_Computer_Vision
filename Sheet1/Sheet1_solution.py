@@ -2,7 +2,6 @@
 import cv2 as cv
 import random as random
 import numpy as np
-import matplotlib.pyplot as plt
 
 def display(window_name, img):
     image = cv.imread(img)
