@@ -32,7 +32,7 @@ def compute_integral_image( img):
     return integral_image
 
     
-# b.1 function to compute the mean grey value of the image by summing up 
+# 1.b.1 function to compute the mean grey value of the image by summing up 
 # each pixel value in the integral image
 def compute_mean_grey_value_1(img):
     integral_image = compute_integral_image(img) # computing the integral image
@@ -46,7 +46,7 @@ def compute_mean_grey_value_1(img):
     mean_grey = sum_grey_value / total_pixels
     return mean_grey
 
-# b.2 function to compute the integral image using the function integral
+# 1.b.2 function to compute the integral image using the function integral
 def compute_integral_image_function(img):
     image = cv.imread(img)
     intensity_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -54,22 +54,21 @@ def compute_integral_image_function(img):
     integral_image = np.array(integral_image, dtype = np.uint8)
     return integral_image
 
-# b.3 function to compute the integral image using my own function
+# 1.b.3 function to compute the integral image using my own function
 def compute_integral_image_own_func(img):
     image = cv.imread(img)
     myfunc_image = compute_integral_image(img)
     return myfunc_image
 
 
-##2a histogram equlaization 
-
+# 2.a histogram equlaization 
 def histogram(img): 
     hist_img = cv.equalizeHist(img) 
     cv.imwrite('bonn_equalized.png', hist_img)
     # Display the original and equalized images (optional)
     return hist_img
 
-##2b historgram
+# 2.b historgram
 def own_histogram(img):
     
     hist, _ = np.histogram(img, bins=256, range=(0, 256))
@@ -82,7 +81,7 @@ def own_histogram(img):
     
     return equalized_image 
 
-##4 2D filtering  
+# 4 2D filtering  
 def Gauss(img):
     image = cv.imread(img)
     gray_image = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
@@ -91,10 +90,11 @@ def Gauss(img):
     blurred_image = cv.GaussianBlur(gray_image, (0, 0), sigmaX=2 * (2 ** 0.5))
 
     # Display the original and blurred images
-    cv.imshow('Original Image', gray_image)
-    cv.imshow('Blurred Image', blurred_image)
+    cv.imshow('4.a Original Image', gray_image)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
-    # Wait for a key press and then close the image windows
+    cv.imshow('4.a Blurred Image', blurred_image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -122,10 +122,11 @@ def filter_2d(img):
     output_image = cv.filter2D(horizontal_filtered, -1, vertical_kernel)
 
     # Display the grayscale and Gaussian filtered images
-    cv.imshow('Grayscale Image', gray_image)
-    cv.imshow('Gaussian Filtered Image', output_image)
+    cv.imshow('4.b Grayscale Image', gray_image)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
 
-    # Wait for a key press and then close the image windows
+    cv.imshow('4.b Gaussian Filtered Image filter2D', output_image)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -149,8 +150,9 @@ def sepFilter2D(img):
     horizontal_filtered = cv.sepFilter2D(gray_image, -1, gaussian_kernel, gaussian_kernel)
 
     # Display the grayscale and Gaussian filtered images
-    cv.imshow('Grayscale Image', gray_image)
-    cv.imshow('Gaussian Filtered Image', horizontal_filtered)
+    cv.imshow('4.c Grayscale Image', gray_image)
+    cv.waitKey(0)
+    cv.imshow('4.c Gaussian Filtered Image sepFilter2D', horizontal_filtered)
 
     # Wait for a key press and then close the image windows
     cv.waitKey(0)
@@ -228,7 +230,8 @@ def filter_salt_n_pepper_with_bilateral(img):
     # applying the bilateral filter
     filtered_image = cv.bilateralFilter(salt_pepper_image, 5, 75, 75)
     return filtered_image
-#8.a 
+
+# Problem 8 a. function to filter the image using the given 2D filter kernels  
 def filters2d(img):
     # Load the image
     image = cv.imread(img)
@@ -251,18 +254,9 @@ def filters2d(img):
     # Apply the second kernel using filter2D
     filtered_image2 = cv.filter2D(gray_image, -1, kernel2)
 
-    # Display the original grayscale image and the filtered images
-    cv.imshow('Grayscale Image', gray_image)
-    cv.imshow('Filtered Image (Kernel 1)', filtered_image1)
-    cv.imshow('Filtered Image (Kernel 2)', filtered_image2)
-
-    # Wait for a key press and then close the image windows
-    cv.waitKey(0)
-    cv.destroyAllWindows() 
-
     return filtered_image1, filtered_image2
 
-#8b  
+# Problem 8 b. function to calculate the filtered image using 1D kernel calculated using SVD  
 def svd(img):
 
     image = cv.imread(img)
@@ -290,17 +284,9 @@ def svd(img):
     filtered_image1 = cv.filter2D(gray_image, -1, approx_kernel1)
     filtered_image2 = cv.filter2D(gray_image, -1, approx_kernel2)
 
-    # Display the original grayscale image and the filtered images
-    cv.imshow('Grayscale Image', gray_image)
-    cv.imshow('Filtered Image svd (Kernel 1)', filtered_image1)
-    cv.imshow('Filtered Image svd(Kernel 2)', filtered_image2)
-
-    # Wait for a key press and then close the image windows
-    cv.waitKey(0)
-    cv.destroyAllWindows() 
-
     return filtered_image1, filtered_image2
-    
+
+# Problem 8. function to calculate the max pixel error    
 def compute_pixel_error(img1, img2):
     # Compute the absolute pixel-wise difference
     pixel_diff = cv.absdiff(img1, img2)
@@ -329,7 +315,6 @@ if __name__ == "__main__":
     integral_image_function = compute_integral_image_function(img)
     cv.imshow("1.b.2 Integral Image using Function - integral",integral_image_function)
     cv.waitKey(0)
-    cv.destroyAllWindows()
     
     # Problem 1 b.3 display the integral image using my own function
     integral_image_own_func = compute_integral_image_own_func(img)
@@ -369,7 +354,7 @@ if __name__ == "__main__":
     filter_once_image_gaussian = filter_with_gaussian(img)
     cv.imshow("5.b Once filtered Image with Gaussian kernel", filter_once_image_gaussian)
     cv.waitKey(0)
-    # cv.destroyAllWindows()
+    cv.destroyAllWindows()
     
     # Problem 5 - computing and printing the absolute pixelwise difference between the two filtered images
     max_pixel_error = compute_pixelwise_difference(img)
@@ -379,38 +364,57 @@ if __name__ == "__main__":
     noise_image = add_salt_and_pepper_noise(img)
     cv.imshow("7. Image with 30% salt and pepper noise", noise_image)
     cv.waitKey(0)
-    # cv.destroyAllWindows()
     
     # Problem 7.a - display the image filtered with a Gaussian Kernel
     gaussian_filtered_salt_n_pepper = filter_salt_n_pepper_with_gaussian(img)
     cv.imshow("7.a Image filtered with Gaussian kernel", gaussian_filtered_salt_n_pepper)
     cv.waitKey(0)
-    # cv.destroyAllWindows()
     
     # Problem 7.b - display the image filtered with a median filter
     median_filtered_salt_n_pepper = filter_salt_n_pepper_with_median(img)
     cv.imshow("7.b Image filtered with median filter", median_filtered_salt_n_pepper)
     cv.waitKey(0)
-    # cv.destroyAllWindows()
     
     # Problem 7.c - display the image filtered with a bilateral filter
     bilateral_filtered_salt_n_pepper = filter_salt_n_pepper_with_bilateral(img)
     cv.imshow("7.c Image filtered with bilateral filter", bilateral_filtered_salt_n_pepper)
     cv.waitKey(0)
     
-    cv.imshow("Filter Comparison", np.vstack((gaussian_filtered_salt_n_pepper, median_filtered_salt_n_pepper, bilateral_filtered_salt_n_pepper)))
+    cv.imshow("7 - Filter Comparison", np.vstack((gaussian_filtered_salt_n_pepper, median_filtered_salt_n_pepper, bilateral_filtered_salt_n_pepper)))
     cv.waitKey(0)
+    cv.destroyAllWindows()
     
+    # problem 8
     filtered_result1, filtered_result2 = filters2d(img)
+    # Display the original grayscale image and the filtered images
+    cv.imshow('8.a Grayscale Image', gray_image)
+    cv.waitKey(0)
+    cv.imshow('8.a Filtered Image (Kernel 1)', filtered_result1)
+    cv.waitKey(0)
+    cv.imshow('8.a Filtered Image (Kernel 2)', filtered_result2)
+
+    # Wait for a key press and then close the image windows
+    cv.waitKey(0)
+    cv.destroyAllWindows() 
+
+
     svd_result1, svd_result2 = svd(img)
+    # Display the original grayscale image and the filtered images
+    cv.imshow('8.b Grayscale Image', gray_image)
+    cv.waitKey(0)
+    cv.imshow('8.b Filtered Image svd (Kernel 1)', svd_result1)
+    cv.waitKey(0)
+    cv.imshow('8.b Filtered Image svd(Kernel 2)', svd_result2)
+    cv.waitKey(0)
+    cv.destroyAllWindows() 
 
     # Compute the pixel error
     max_error1 = compute_pixel_error(filtered_result1, svd_result1)
     max_error2 = compute_pixel_error(filtered_result2, svd_result2)
 
     # Print the maximum pixel error
-    print(f"Maximum Pixel Error (Kernel 1): {max_error1}")
-    print(f"Maximum Pixel Error (Kernel 2): {max_error2}")
+    print(f"8. Maximum Pixel Error (Kernel 1): {max_error1}")
+    print(f"8. Maximum Pixel Error (Kernel 2): {max_error2}")
     
     
     
