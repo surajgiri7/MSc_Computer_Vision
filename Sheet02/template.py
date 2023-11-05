@@ -264,13 +264,65 @@ def task3():
 
 
 def get_derivative_of_gaussian_kernel(size, sigma):
-    # TODO: implement
-    raise NotImplementedError
-
+    kernel = cv2.getGaussianKernel(size, sigma)
+    kernel_2D = kernel.dot(kernel.reshape(1, size)) 
+    dx, dy = np.gradient(kernel_2D)
+    print("Weights of derivative of gaussian kernel in X direction")
+    print(dx)
+    print("Weights of derivative of gaussian kernel in Y direction")
+    print(dy)
+    return dx, dy
 
 def non_max_suppression(gradient_magnitude, gradient_direction):
-    # TODO: implement
-    raise NotImplementedError
+    m, n = gradient_magnitude.shape
+    resulting_image = np.zeros((m, n), dtype=np.float32)
+    angle = gradient_direction * 180.
+    angle[angle < 0] += 180
+
+    for i in range (1, m-1):
+        for j in range (1, n-1):
+            q = 255
+            r = 255
+
+            #angle 0
+            if (0 <= angle[i,j] < 22.5) or (157.5 <= angle[i,j] <= 180):
+                q = gradient_magnitude[i, j+1]
+                r = gradient_magnitude[i, j-1]
+            #angle 45
+            elif (22.5 <= angle[i,j] < 67.5):
+                q = gradient_magnitude[i+1, j-1]
+                r = gradient_magnitude[i-1, j+1]
+            #angle 90
+            elif (67.5 <= angle[i,j] < 112.5):
+                q = gradient_magnitude[i+1, j]
+                r = gradient_magnitude[i-1, j]
+            #angle 135
+            elif (112.5 <= angle[i,j] < 157.5):
+                q = gradient_magnitude[i-1, j-1]
+                r = gradient_magnitude[i+1, j+1]
+
+            if (gradient_magnitude[i,j] >= q) and (gradient_magnitude[i,j] >= r):
+                resulting_image[i,j] = gradient_magnitude[i,j]
+            else:
+                resulting_image[i,j] = 0
+
+    return resulting_image
+
+
+
+def thresholding(image, low, high):
+    m, n = image.shape
+    result = np.zeros((m,n), dtype=np.float32)
+
+    for i in range(1, m-1):
+        for j in range(1, n-1):
+            if image[i,j] > high:
+                result[i,j] = 255
+            elif image[i,j] < low:
+                result[i,j] = 0
+            else:
+                result[i,j] = image[i,j]
+    return result
 
 
 def task4():
@@ -278,21 +330,64 @@ def task4():
 
     kernel_x, kernel_y = get_derivative_of_gaussian_kernel(7, 2)
 
-    edges_x = None  # TODO: convolve with kernel_x
-    edges_y = None  # TODO: convolve with kernel_y
+    # convolvve with kernel_x 
+    edges_x = cv2.filter2D(image.astype(np.float32), -1, kernel_x)
+    # convolvve with kernel_y
+    edges_y = cv2.filter2D(image.astype(np.float32), -1, kernel_y)
 
-    magnitude = None  # TODO: compute edge magnitude
-    direction = None  # TODO: compute edge direction
+    cv2.imshow("original", image)
+    cv2.waitKey(0)
+    cv2.imshow("edges_x", edges_x)
+    cv2.waitKey(0)
+    cv2.imshow("edges_y", edges_y)
+    cv2.waitKey(0)
+
+    # computing the edge magnitude
+    magnitude = np.sqrt(edges_x ** 2 + edges_y ** 2)
+    # computing the edge direction
+    direction = np.arctan2(edges_y, edges_x)
+    print("Magnitude: ", magnitude)
+    print("Direction: ", direction)
+    cv2.imshow("magnitude image", magnitude)
+    cv2.waitKey(0)
+    cv2.imshow("direction image", direction)
+    cv2.waitKey(0)
+    
     
     suppressed_image = non_max_suppression(magnitude, direction)
+    print("Suppressed image: ", suppressed_image)
+    cv2.imshow("suppressed_image", suppressed_image)
+    cv2.waitKey(0)
+
+    # applying thresholding
+    low = 0.1 * np.max(suppressed_image)
+    high = 0.9 * np.max(suppressed_image)
+    print("Low: ", low)
+    print("High: ", high)
+    threshold_image = thresholding(suppressed_image, low, high)
+    print("Threshold image: ", threshold_image)
+    cv2.imshow("threshold_image", threshold_image)
+    cv2.waitKey(0)
 
     # Sobel
-    sobel_kernel_x, sobel_kernel_y = None, None
+    kernel_size = 3
+    sobel_kernel_x, sobel_kernel_y = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=kernel_size), cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=kernel_size)
 
-    edge_sobel_x = None  # TODO: compute the edges with sobel
-    edge_sobel_y = None  # TODO: compute the edges with sobel
+    edge_sobel_x = cv2.convertScaleAbs(sobel_kernel_x)
+    edge_sobel_y = cv2.convertScaleAbs(sobel_kernel_y)
 
-    # TODO: compute the mean absolute error
+    cv2.imshow("edge_sobel_x", edge_sobel_x)
+    cv2.waitKey(0)
+    cv2.imshow("edge_sobel_y", edge_sobel_y)
+    cv2.waitKey(0)
+    sobel_edge_detected = cv2.addWeighted(edge_sobel_x, 0.5, edge_sobel_y, 0.5, 0)
+    cv2.imshow("sobel_edge_detected", sobel_edge_detected)
+    cv2.waitKey(0)
+
+    # computing the mean absolute error
+    mean_abs_error = np.mean(np.abs(np.subtract(sobel_edge_detected.astype(np.int32), threshold_image.astype(np.int32))))
+    print("Mean absolute error: ", mean_abs_error)
+
 
 
 ###########################################################
@@ -318,8 +413,8 @@ def task5():
 
 if __name__ == "__main__":
     #task1()
-    task2()
+    # task2()
     #task3()
-    #task4()
+    task4()
     # task5()
     cv2.destroyAllWindows()
