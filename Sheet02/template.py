@@ -181,26 +181,35 @@ def task2():
     cv2.imshow("image_ssd", image_ssd)
     cv2.waitKey(0)
 
-    # subtracting 0.5 to the image and repeating the template matching 
-    new_image = image.astype(np.float32) - 0.5
-    new_template = template.astype(np.float32) - 0.5
-
-    new_ncc_result = normalized_cross_correlation(new_image, new_template)
-    new_ssd_result = ssd(new_image, new_template)
-
-    # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
-    new_matches_ncc = np.where(new_ncc_result >= 0.7, 1, 0)
-    new_matches_ssd = np.where(new_ssd_result <= 0.1, 1, 0)
+    # subtracting 0.5 to the image, making sure the values do not become negative,
+    #  and repeating the template matching 
+    image = image.astype(np.float32) - 0.5
+    image[image < 0] = 0
+    result_ncc = normalized_cross_correlation(image, template)
+    result_ssd = ssd(image, template)
 
     # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
-    new_image_ncc = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], new_matches_ncc)
-    new_image_ssd = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], new_matches_ssd)
+    matches_ncc = np.where(result_ncc >= 0.7, 1, 0)
+    matches_ssd = np.where(result_ssd <= 0.1, 1, 0)
+
+    # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
+    new_image_ncc = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ncc)
+    new_image_ssd = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ssd)
 
     # display results
     cv2.imshow("new_image_ncc", new_image_ncc)
     cv2.waitKey(0)
     cv2.imshow("new_image_ssd", new_image_ssd)
     cv2.waitKey(0)
+
+   
+
+    """
+    When I performed the subtraction of 0.5 to the image, making sure the values do not become negative,
+    and repeating the template matching, the results were not as good as the first one.
+    It detects the place of the template in the image but the image is not shown. The reason is might be 
+    that the image is not normalized anymore, so the values are not in the range [0,1].
+    """
     
 
 
