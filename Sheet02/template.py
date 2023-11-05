@@ -100,9 +100,7 @@ def task1():
     print(mean_abs_diff)
    
      
-   
 
-    # TODO: compare results
 
 ###########################################################
 #                                                         #
@@ -111,28 +109,99 @@ def task1():
 ###########################################################
 
 def normalized_cross_correlation(image, template):
-    # TODO: implement
-    raise NotImplementedError
+    k, l = template.shape
+    n_rows = image.shape[0] - k + 1 
+    n_cols = image.shape[1] - l + 1
 
-def ssd(image, template):
-    # TODO: implement
-    raise NotImplementedError
+    normalized_cross_correlation = np.zeros((n_rows, n_cols))
+
+    xcorr_template = template - np.mean(template)
+    sum_norm_template = np.sum(xcorr_template ** 2)
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            image_patch = image[row:row + k, col:col + l]
+            xcorr_image = image_patch - np.mean(image_patch)
+
+            normalized_cross_correlation[row, col] = np.sum(xcorr_template * xcorr_image) / np.sqrt(sum_norm_template * np.sum(xcorr_image ** 2))
+
+    return normalized_cross_correlation
+
+
+    
+
+def ssd(image, template): # measuring normalized square sum difference
+    k, l = template.shape
+    n_rows = image.shape[0] - k + 1
+    n_cols = image.shape[1] - l + 1
+
+    ssd = np.zeros((n_rows, n_cols))
+
+    for row in range(n_rows):
+        for col in range(n_cols):
+            image_patch = image[row:row + k, col:col + l]
+            ssd[row, col] = np.sum((template - image_patch) ** 2)
+    
+    print("ssd")
+    print(ssd)
+    return ssd / (k * l)
+
+
 
 def draw_rectangle_at_matches(image, template_h, template_w, matches):
-    # TODO: implement
-    raise NotImplementedError
+    image_copy = image.copy()
+
+    for row in range(matches.shape[0]):
+        for col in range(matches.shape[1]):
+            if matches[row, col]:
+                cv2.rectangle(image_copy, (col, row), (col + template_w, row + template_h), (0,0, 255), 1)
+
+    return image_copy
+
 
 def task2():
     image = cv2.imread("./data/lena.png", cv2.IMREAD_GRAYSCALE)
     template = cv2.imread("./data/eye.png", cv2.IMREAD_GRAYSCALE)
 
-    # convert to float and apply intensity transformation to image
-
+    # convert to float and apply intensity transformation to image and template
     result_ncc = normalized_cross_correlation(image, template)
     result_ssd = ssd(image, template)
 
-    # TODO: draw rectangle around found locations
-    # TODO: show the results
+    # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
+    matches_ncc = np.where(result_ncc >= 0.7, 1, 0) 
+    matches_ssd = np.where(result_ssd <= 0.1, 1, 0)
+
+    # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
+    image_ncc = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ncc)
+    image_ssd = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ssd)
+
+    # display results
+    cv2.imshow("image_ncc", image_ncc)
+    cv2.waitKey(0)
+    cv2.imshow("image_ssd", image_ssd)
+    cv2.waitKey(0)
+
+    # subtracting 0.5 to the image, making sure the values do not become negative,
+    #  and repeating the template matching 
+    image = image.astype(np.float32) - 0.5
+    image[image < 0] = 0
+    result_ncc = normalized_cross_correlation(image, template)
+    result_ssd = ssd(image, template)
+
+    # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
+    matches_ncc = np.where(result_ncc >= 0.7, 1, 0)
+    matches_ssd = np.where(result_ssd <= 0.1, 1, 0)
+
+    # drawing rectangles around matches where similarity <= 0.1 for SSD and >= 0.7 for NCC using np.where
+    new_image_ncc = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ncc)
+    new_image_ssd = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ssd)
+
+    # display results
+    cv2.imshow("new_image_ncc", new_image_ncc)
+    cv2.waitKey(0)
+    cv2.imshow("new_image_ssd", new_image_ssd)
+    cv2.waitKey(0)
+
 
 
 ###########################################################
@@ -143,37 +212,106 @@ def task2():
 
 
 def build_gaussian_pyramid_opencv(image, num_levels):
-    # TODO: implement
-    raise NotImplementedError
+    
+    pyramid = [image]
+    for _ in range(num_levels):
+        image = cv2.pyrDown(image)
+        pyramid.append(image)
+    return pyramid
 
+
+def custom_pyrDown(image):
+    kernel = cv2.getGaussianKernel(3, 1)
+    kernel = kernel.dot(kernel.T)
+    # Convolve the image with the Gaussian kernel
+    blurred = cv2.filter2D(image, -1, kernel)
+    # Down-sample by selecting every second pixel
+    downsampled = blurred[::2, ::2]
+
+    return downsampled
 
 def build_gaussian_pyramid(image, num_levels):
-    # TODO: implement
-    raise NotImplementedError
+    
+    """ 
+    own function for gaussian pyramid
+    """
+    pyramid = [image]
+    for _ in range(num_levels):
+        image = custom_pyrDown(image)
+        pyramid.append(image)
+    return pyramid 
 
 
-def template_matching_multiple_scales(pyramid_image, pyramid_template):
-    # TODO: implement
-    raise NotImplementedError
+
+
+   
+
+
+def template_matching_multiple_scales(pyramid_image, pyramid_template, threshold):
+    results = []
+    level = len(pyramid_image)
+    print("# of Level:", level)
+
+    for idx in range(0, level):
+        refimg = pyramid_image[-idx]
+        tplimg = pyramid_template[-idx]
+
+        # Perform template matching
+        result = cv2.matchTemplate(refimg, tplimg, cv2.TM_CCORR_NORMED)
+
+        if idx > 0:
+            # Calculate mask for the pyramid level
+            mask = cv2.pyrUp(results[-1])
+            T, mask = cv2.threshold(mask, threshold, 1.0, cv2.THRESH_BINARY)
+
+            # Use binary thresholding to convert to 0s and 1s
+            mask = (mask > 0).astype(np.float32)
+
+            # Create a mask that reflects the size of the template
+            mask_template = cv2.matchTemplate(refimg, tplimg, cv2.TM_CCORR_NORMED)
+            mask_template = (mask_template > threshold).astype(np.float32)
+
+            if mask.shape != result.shape:
+                mask = cv2.resize(mask, (result.shape[1], result.shape[0]))
+
+            # Apply the masks
+            mask *= mask_template
+            result *= mask
+
+        results.append(result)
+
+    return results
+
 
 
 def task3():
+    # Load the image and template
     image = cv2.imread("./data/traffic.jpg", cv2.IMREAD_GRAYSCALE)
     template = cv2.imread("./data/traffic-template.png", cv2.IMREAD_GRAYSCALE)
 
+    my_pyramid = build_gaussian_pyramid(image, 4)
     cv_pyramid = build_gaussian_pyramid_opencv(image, 4)
 
-    my_pyramid = build_gaussian_pyramid(image, 4)
-    my_pyramid_template = build_gaussian_pyramid(template, 4)
+    for x, (cv_img, custom_img) in enumerate(zip(cv_pyramid, my_pyramid)):
+        diff = np.mean(np.abs(cv_img - custom_img))
+        print(f'Mean abs difference: level {x}: {diff:.2f}')
 
-    # TODO: compare and print mean absolute difference at each level
+    start_time = time.time()
+    result = normalized_cross_correlation(image, template)
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Time taken for NCC: {elapsed_time:.4f} seconds")
 
-    # TODO: calculate the time needed for template matching without the pyramid
+    pyramid_template = build_gaussian_pyramid(template, 4)
+    start_time_pyramid = time.time()
+    result_pyramid = template_matching_multiple_scales(my_pyramid, pyramid_template, 0.5)
+    end_time_pyramid = time.time()
+    elapsed_time_pyramid = end_time_pyramid - start_time_pyramid
+    print(f"Time taken for NCC with pyramid: {elapsed_time_pyramid:.4f} seconds")
 
-    result = template_matching_multiple_scales(my_pyramid, my_pyramid_template)
-    # TODO: calculate the time needed for template matching with the pyramid
+    
 
-    # TODO: show the template matching results using the pyramid
+    
 
 
 ###########################################################
@@ -229,16 +367,16 @@ def task5():
 
     display("edges",edges) 
 
-    dist_transfom_cv = cv2.distanceTransform(image, cv2.DIST_L2, 0)
+    dist_transfom_cv = cv2.distanceTransform(image, cv2.DIST_L2, 0.7)
 
     display("distance_cv",dist_transfom_cv)
 
-    dist_transfom_cv_filtered = None  # TODO: compute after filtering some high-frequency edges
+
 
 
 if __name__ == "__main__":
     #task1()
     #task2()
-    #task3()
+    task3()
     #task4()
-    task5()
+    #task5()
