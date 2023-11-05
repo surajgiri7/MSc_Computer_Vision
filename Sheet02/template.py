@@ -16,11 +16,6 @@ def display(window_name, img):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-
-
-
-
-
 def get_convolution_using_fourier_transform(image, kernel):
 
     # Calculate the Fourier transforms of the image and kernel
@@ -90,12 +85,12 @@ def task1():
     own_conv = convolution_spatial_vectorized(image,kernel)
     fft_result = get_convolution_using_fourier_transform(image,kernel) 
     fft_result_correction = get_convolution_using_fourier_transform_correction(image,kernel)
-    display("original image",image) 
-    display("convolution image",conv_result) 
-    display("own function",own_conv)
-    display("fft function",fft_result) 
+    display("1. original image",image) 
+    display("1. convolution image",conv_result) 
+    display("1. own function",own_conv)
+    display("1. fft function",fft_result) 
     #oscillations or ripples around high-contrast edges in the image in fft. 
-    display("fft_result_correction",fft_result_correction)
+    display("1. fft_result_correction",fft_result_correction)
     mean_abs_diff = np.mean(np.abs(np.subtract(conv_result.astype(np.int32), fft_result.astype(np.int32))))
     print(mean_abs_diff)
    
@@ -141,10 +136,8 @@ def ssd(image, template): # measuring normalized square sum difference
         for col in range(n_cols):
             image_patch = image[row:row + k, col:col + l]
             ssd[row, col] = np.sum((template - image_patch) ** 2)
-    
-    print("ssd")
-    print(ssd)
-    return ssd / (k * l)
+
+    return ssd 
 
 
 
@@ -176,9 +169,9 @@ def task2():
     image_ssd = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ssd)
 
     # display results
-    cv2.imshow("image_ncc", image_ncc)
+    cv2.imshow("2. NCC Result", image_ncc)
     cv2.waitKey(0)
-    cv2.imshow("image_ssd", image_ssd)
+    cv2.imshow("2. SSD Result", image_ssd)
     cv2.waitKey(0)
 
     # subtracting 0.5 to the image, making sure the values do not become negative,
@@ -197,10 +190,20 @@ def task2():
     new_image_ssd = draw_rectangle_at_matches(image, template.shape[0], template.shape[1], matches_ssd)
 
     # display results
-    cv2.imshow("new_image_ncc", new_image_ncc)
+    cv2.imshow("2. NCC Result - 0.5", new_image_ncc)
     cv2.waitKey(0)
-    cv2.imshow("new_image_ssd", new_image_ssd)
+    cv2.imshow("2. SSD Result - 0.5", new_image_ssd)
     cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+   
+
+    """
+    When I performed the subtraction of 0.5 to the image, making sure the values do not become negative,
+    and repeating the template matching, the results were not as good as the first one.
+    It detects the place of the template in the image but the image is not shown. The reason is might be 
+    that the image is not normalized anymore, so the values are not in the range [0,1].
+    """
 
 
 
@@ -240,11 +243,6 @@ def build_gaussian_pyramid(image, num_levels):
         image = custom_pyrDown(image)
         pyramid.append(image)
     return pyramid 
-
-
-
-
-   
 
 
 def template_matching_multiple_scales(pyramid_image, pyramid_template, threshold):
@@ -294,24 +292,20 @@ def task3():
 
     for x, (cv_img, custom_img) in enumerate(zip(cv_pyramid, my_pyramid)):
         diff = np.mean(np.abs(cv_img - custom_img))
-        print(f'Mean abs difference: level {x}: {diff:.2f}')
+        print(f'3. Mean abs difference: level {x}: {diff:.2f}')
 
     start_time = time.time()
     result = normalized_cross_correlation(image, template)
     end_time = time.time()
     elapsed_time = end_time - start_time
-    print(f"Time taken for NCC: {elapsed_time:.4f} seconds")
+    print(f"3. Time taken for NCC: {elapsed_time:.4f} seconds")
 
     pyramid_template = build_gaussian_pyramid(template, 4)
     start_time_pyramid = time.time()
     result_pyramid = template_matching_multiple_scales(my_pyramid, pyramid_template, 0.5)
     end_time_pyramid = time.time()
     elapsed_time_pyramid = end_time_pyramid - start_time_pyramid
-    print(f"Time taken for NCC with pyramid: {elapsed_time_pyramid:.4f} seconds")
-
-    
-
-    
+    print(f"3. Time taken for NCC with pyramid: {elapsed_time_pyramid:.4f} seconds")
 
 
 ###########################################################
@@ -322,13 +316,65 @@ def task3():
 
 
 def get_derivative_of_gaussian_kernel(size, sigma):
-    # TODO: implement
-    raise NotImplementedError
-
+    kernel = cv2.getGaussianKernel(size, sigma)
+    kernel_2D = kernel.dot(kernel.reshape(1, size)) 
+    dx, dy = np.gradient(kernel_2D)
+    print("4. Weights of derivative of gaussian kernel in X direction")
+    print(dx)
+    print("4. Weights of derivative of gaussian kernel in Y direction")
+    print(dy)
+    return dx, dy
 
 def non_max_suppression(gradient_magnitude, gradient_direction):
-    # TODO: implement
-    raise NotImplementedError
+    m, n = gradient_magnitude.shape
+    resulting_image = np.zeros((m, n), dtype=np.float32)
+    angle = gradient_direction * 180.
+    angle[angle < 0] += 180
+
+    for i in range (1, m-1):
+        for j in range (1, n-1):
+            q = 255
+            r = 255
+
+            #angle 0
+            if (0 <= angle[i,j] < 22.5) or (157.5 <= angle[i,j] <= 180):
+                q = gradient_magnitude[i, j+1]
+                r = gradient_magnitude[i, j-1]
+            #angle 45
+            elif (22.5 <= angle[i,j] < 67.5):
+                q = gradient_magnitude[i+1, j-1]
+                r = gradient_magnitude[i-1, j+1]
+            #angle 90
+            elif (67.5 <= angle[i,j] < 112.5):
+                q = gradient_magnitude[i+1, j]
+                r = gradient_magnitude[i-1, j]
+            #angle 135
+            elif (112.5 <= angle[i,j] < 157.5):
+                q = gradient_magnitude[i-1, j-1]
+                r = gradient_magnitude[i+1, j+1]
+
+            if (gradient_magnitude[i,j] >= q) and (gradient_magnitude[i,j] >= r):
+                resulting_image[i,j] = gradient_magnitude[i,j]
+            else:
+                resulting_image[i,j] = 0
+
+    return resulting_image
+
+
+
+def thresholding(image, low, high):
+    m, n = image.shape
+    result = np.zeros((m,n), dtype=np.float32)
+
+    for i in range(1, m-1):
+        for j in range(1, n-1):
+            if image[i,j] > high:
+                result[i,j] = 255
+            elif image[i,j] < low:
+                result[i,j] = 0
+            else:
+                result[i,j] = image[i,j]
+    return result
 
 
 def task4():
@@ -336,21 +382,64 @@ def task4():
 
     kernel_x, kernel_y = get_derivative_of_gaussian_kernel(7, 2)
 
-    edges_x = None  # TODO: convolve with kernel_x
-    edges_y = None  # TODO: convolve with kernel_y
+    # convolve the image with Gaussian kernels
+    edges_x = cv2.filter2D(image.astype(np.float32), -1, kernel_x)
+    edges_y = cv2.filter2D(image.astype(np.float32), -1, kernel_y)
 
-    magnitude = None  # TODO: compute edge magnitude
-    direction = None  # TODO: compute edge direction
+    cv2.imshow("4. Original Image", image)
+    cv2.waitKey(0)
+    cv2.imshow("4. Convolving the image with dx", edges_x)
+    cv2.waitKey(0)
+    cv2.imshow("4. Convolving the image with dy", edges_y)
+    cv2.waitKey(0)
+
+    # computing the edge magnitude
+    magnitude = np.sqrt(edges_x ** 2 + edges_y ** 2)
+    # computing the edge direction
+    direction = np.arctan2(edges_y, edges_x)
+    print("4. Magnitude: ", magnitude)
+    print("4. Direction: ", direction)
+    cv2.imshow("4. Magnitude Image", magnitude)
+    cv2.waitKey(0)
+    cv2.imshow("4. Direction Image", direction)
+    cv2.waitKey(0)
     
     suppressed_image = non_max_suppression(magnitude, direction)
+    print("4. Suppressed Image: ", suppressed_image)
+    cv2.imshow("4. Suppressed Image", suppressed_image)
+    cv2.waitKey(0)
+
+    # applying thresholding
+    low = 0.1 * np.max(suppressed_image)
+    high = 0.9 * np.max(suppressed_image)
+    print("4. Low Threshold: ", low)
+    print("4. High Threshold: ", high)
+    threshold_image = thresholding(suppressed_image, low, high)
+    print("4. Threshold Image: ", threshold_image)
+    cv2.imshow("4. Thresholded Image", threshold_image)
+    cv2.waitKey(0)
 
     # Sobel
-    sobel_kernel_x, sobel_kernel_y = None, None
+    kernel_size = 3
+    sobel_kernel_x, sobel_kernel_y = cv2.Sobel(image, cv2.CV_64F, 1, 0, ksize=kernel_size), cv2.Sobel(image, cv2.CV_64F, 0, 1, ksize=kernel_size)
 
-    edge_sobel_x = None  # TODO: compute the edges with sobel
-    edge_sobel_y = None  # TODO: compute the edges with sobel
+    edge_sobel_x = cv2.convertScaleAbs(sobel_kernel_x)
+    edge_sobel_y = cv2.convertScaleAbs(sobel_kernel_y)
+    magnitude_sobel = np.sqrt(edge_sobel_x ** 2 + edge_sobel_y ** 2)
 
-    # TODO: compute the mean absolute error
+    cv2.imshow("4. Sobel Image X_direction", edge_sobel_x)
+    cv2.waitKey(0)
+    cv2.imshow("4. Sobel Image Y_direction", edge_sobel_y)
+    cv2.waitKey(0)
+    sobel_edge_detected = cv2.addWeighted(edge_sobel_x, 0.5, edge_sobel_y, 0.5, 0)
+    cv2.imshow("4. Sobel Edge Detected Image", sobel_edge_detected)
+    cv2.waitKey(0)
+
+    # computing the mean absolute error
+    mean_abs_error = np.mean(np.abs(np.subtract(sobel_edge_detected.astype(np.int32), threshold_image.astype(np.int32))))
+    print("4. Mean Absolute Error: ", mean_abs_error)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 
 ###########################################################
@@ -365,18 +454,18 @@ def task5():
 
     edges = cv2.Canny(image, 50, 60)
 
-    display("edges",edges) 
+    display("5. edges",edges) 
 
     dist_transfom_cv = cv2.distanceTransform(image, cv2.DIST_L2, 0.7)
 
-    display("distance_cv",dist_transfom_cv)
+    display("5. distance_cv",dist_transfom_cv)
 
 
 
 
 if __name__ == "__main__":
-    #task1()
-    #task2()
+    task1()
+    task2()
     task3()
-    #task4()
-    #task5()
+    task4()
+    task5()
