@@ -158,6 +158,10 @@ def task2():
     image = cv2.imread("./data/lena.png", cv2.IMREAD_GRAYSCALE)
     template = cv2.imread("./data/eye.png", cv2.IMREAD_GRAYSCALE)
 
+    # converting them to float [0,1]
+    image = image.astype(np.float32) / 255
+    template = template.astype(np.float32) / 255
+
     # convert to float and apply intensity transformation to image and template
     result_ncc = normalized_cross_correlation(image, template)
     result_ssd = ssd(image, template)
