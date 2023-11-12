@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 ##############################################
 
 
-def display(img):
-    cv.imshow('image', img)
+def display(window_name, img):
+    cv.imshow(window_name, img)
     cv.waitKey(0)
     cv.destroyAllWindows()
 
@@ -44,8 +44,8 @@ def task_1_a():
         cv.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
     # Save the result img
-    cv.imwrite('detected_lines.png', img)
-    # display(image)
+    # cv.imwrite('detected_lines.png', img)
+    display("Hough Lines", img)
 
 
 '''
@@ -65,54 +65,56 @@ so we require a accumaltor array to store all the intersection
 def myHoughLines(img_edges, d_resolution, theta_step_sz, threshold):
     """
     Your implementation of HoughLines
-    :param img_edges: single-channel binary source image (e.g: edges)
+    :param img_edges: single-channel binary source image (e.g., edges)
     :param d_resolution: the resolution for the distance parameter
     :param theta_step_sz: the resolution for the angle parameter
     :param threshold: minimum number of votes to consider a detection
     :return: list of detected lines as (d, theta) pairs and the accumulator
     """
-    distSteps = int(np.linalg.norm(img_edges.shape) / d_resolution)
-    degSteps = int(np.pi / theta_step_sz)
+    height, width = img_edges.shape
+    max_d = int(np.linalg.norm([height, width]))
 
-    accumulator = np.zeros((degSteps, distSteps))
-    with np.nditer(img_edges, flags=['multi_index']) as it:
-        for px in it:
-            if px > 3:
-                for deg in range(degSteps):
-                    p = (it.multi_index[0] * np.cos(deg)) + (it.multi_index[1] * np.sin(deg))
-                    if(-distSteps/2 <= p and p < distSteps/2):
-                        accumulator[deg, int(p + distSteps/2) ] += 1
+    # Create the accumulator
+    accumulator = np.zeros((int(180 / theta_step_sz), int(max_d / d_resolution)))
 
-    detected_lines = []
-    with np.nditer(accumulator, flags=['multi_index']) as it2:
-        for votes in it2:
-            if votes >= threshold:
-                detected_lines.append(it2.multi_index)
+    # Get non-zero pixel coordinates from the edge image
+    y_coor, x_coor = np.where(img_edges == 255)
+
+    with np.nditer([x_coor, y_coor], op_flags=[['readonly'], ['readonly']]) as it:
+        for x, y in it:
+            thetas = np.deg2rad(np.arange(0, 180, theta_step_sz))
+            distances = np.round(x * np.cos(thetas) + y * np.sin(thetas)).astype(int)
+
+            # Accumulate votes in the Hough space
+            accumulator[np.arange(len(thetas)), distances] += 1
+
+    # Extract detected lines based on the threshold
+    detected_lines_indices = np.argwhere(accumulator > threshold)
+    detected_lines = np.column_stack((detected_lines_indices[:, 0] * theta_step_sz,
+                                      detected_lines_indices[:, 1]))
 
     return detected_lines, accumulator
-
 
 def task_1_b():
     print("Task 1 (b) ...")
     img = cv.imread('../images/shapes.png')
     edges = cv.Canny(img,50,150,apertureSize = 3)
-    houghLines, accumulator= myHoughLines(edges,0.7,np.pi/180,55)
+    detected_lines, accumulator = myHoughLines(edges, 1, 2, 50)
+    display("Accumulator Image", accumulator/accumulator.mean())
 
-    display(accumulator/np.max(accumulator))
-
-    for theta,rho in houghLines:
-        rho = rho - accumulator.shape[1] / 2
+    for theta, rho in detected_lines:
+        theta = np.deg2rad(theta)
         a = np.cos(theta)
         b = np.sin(theta)
-        x0 = a*rho
-        y0 = b*rho
-        x1 = int(x0 + 10000*(-b))
-        y1 = int(y0 + 10000*(a))
-        x2 = int(x0 - 10000*(-b))
-        y2 = int(y0 - 10000*(a))
-        cv.line(img,(x1,y1),(x2,y2),(0,0,255),2)
+        x0 = a * rho
+        y0 = b * rho
+        x1 = int(round(x0 + 1000 * (-b)))
+        y1 = int(round(y0 + 1000 * (a)))
+        x2 = int(round(x0 - 1000 * (-b)))
+        y2 = int(round(y0 - 1000 * (a)))
+        cv.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-    display(img)
+    display("My Hough Lines", img)
 
 
 ##############################################
@@ -189,22 +191,11 @@ def task_3_a():
     print("Task 3 (a) ...")
     img = cv.imread('../images/flower.png')
     segment_image(img, 'intensity', [2, 4, 6])
-    '''
-    ...
-    your code ...
-    ...
-    '''
-
 
 def task_3_b():
     print("Task 3 (b) ...")
     img = cv.imread('../images/flower.png')
     segment_image(img, 'color', [2, 4, 6])
-    '''
-    ...
-    your code ...
-    ...
-    '''
 
 
 def task_3_c():
@@ -240,7 +231,7 @@ def task_3_c():
             img_copy[cluster_indices] = cluster[0:3]
         # Reshape Image to original shape and display
         img_copy = img_copy.reshape(img.shape[0], img.shape[1], 3)
-        display(img_copy)
+        display("Intensity Position",img_copy)
 
 
 def task_3_d():
@@ -265,28 +256,28 @@ def meanShift(data, window_size, kernel, x1, y1):
     :param x1, y1: original position (x1, y1)
     :return: shifted position (x2, y2) and sum of weights within the window
     """
-    x2 = x1
-    y2 = y1
-    sum_w = 0.0 
+    x2 = 0.0
+    y2 = 0.0
+    sum_w = 0
 
+    # iterating over all data points
     for i in data:
-        # calculating the distance from the current point to the original point
-        distance = np.sqrt((i[0] - x1)**2 + (i[1] - y1)**2)
-
-        # checking if the distance is within the window size
+        # calculating the distance between the current point and the original point
+        distance = np.sqrt((i[0] - x1) ** 2 + (i[1] - y1) ** 2)
+        # checking if the distance is within the window
         if distance <= window_size:
             # calculating the weight
-            weight = kernel(distance)
-            # calculating the sum of weights
-            sum_w += weight
-            # calculating the shifted position
-            x2 += i[0] * weight
-            y2 += i[1] * weight
+            w = kernel(distance)
+            # calculating the new position
+            x2 += i[0] * w
+            y2 += i[1] * w
+            sum_w += w
+            print("x: ", x2,"y: ", y2, "sum: ", sum_w)
+    # # calculating the new position
+    # print(sum_w)
+    # x2 /= sum_w
+    # y2 /= sum_w
 
-    # calculating the final shifted position after normalization
-    x2 /= sum_w
-    y2 /= sum_w
-    
     return x2, y2, sum_w
 
 def task_4_a():
@@ -296,32 +287,49 @@ def task_4_a():
     edges = cv.Canny(img_gray, 50, 150, apertureSize=3)
     theta_res = np.pi / 180
     d_res = 1
-    # img_gray = None # convert the image into grayscale
-    # edges = None # detect the edges
-    # theta_res = None # set the resolution of theta
-    # d_res = None # set the distance resolution
     _, accumulator = myHoughLines(edges, d_res, theta_res, 50)
-
+    # print("!!!!!")
+    # print(meanShift(accumulator, 10, lambda x: 1, 0, 0))
+    # print("!!!!!")
+    # # printing the peaks of the accumulator
+    # print(accumulator.max())
+    # print(accumulator.argmax())
+    # print(accumulator.shape)
     # finding the peaks using mean shift
     peaks = []
     for i in range(accumulator.shape[0]):
         for j in range(accumulator.shape[1]):
-            # calculating the shifted position and sum of weights
-            x2, y2, sum_w = meanShift(accumulator, 5, lambda x: np.exp(-x**2/2), i, j) # kernel used = gaussian
-            peaks.append((x2, y2))
+            # calculating the new position and the sum of weights
+            x2, y2, sum_w = meanShift(accumulator, 5, lambda x: 1, i, j)
+            # storing peaks if the point is a local maximum
+            if sum_w > 100 and (x2, y2) not in peaks:
+                peaks.append((x2, y2))
+    # printing the peaks
+    print(peaks)
 
-    # plotting the accumulator
-    plt.imshow(accumulator, cmap='gray')
-    plt.title('Hough Transform Accumulator')
-    plt.show()
+    # drawing the lines
+    for peak in peaks:
+        rho = peak[0]
+        theta = peak[1]
+        a = np.cos(theta)
+        b = np.sin(theta)
+        x0 = a * rho
+        y0 = b * rho
+        # calculating the points for the line
+        x1 = int(x0 + 1000 * (-b))
+        y1 = int(y0 + 1000 * (a))
+        x2 = int(x0 - 1000 * (-b))
+        y2 = int(y0 - 1000 * (a))
+        # drawing the line
+        cv.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-    # plotting the peaks
-    plt.imshow(img_gray, cmap='gray')
-    plt.scatter([i[1] for i in peaks], [i[0] for i in peaks], c='r', s=5)
-    plt.title('Detected Peaks')
-    plt.show()
-    
-    
+    # displaying the image
+    cv.imshow("image", img)
+    cv.waitKey(0)
+    cv.destroyAllWindows()
+
+
+
 
 def task_4_b():
     print("Task 4 (b) ...")
@@ -337,10 +345,11 @@ def task_4_b():
 ##############################################
 
 if __name__ == "__main__":
-    # task_1_a()
+    task_1_a()
     task_1_b() 
-    # task_3_a() 
-    # task_3_b() 
-    # task_3_c()
-    # task_4_a()
+    task_3_a() 
+    task_3_b() 
+    task_3_c()
+    task_4_a()
+    task_4_b()
     
