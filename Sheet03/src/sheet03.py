@@ -19,10 +19,10 @@ def display(img):
 def task_1_a():
     print("Task 1 (a) ...")
     img = cv.imread('../images/shapes.png')
-    image = cv.imread(img)
+    # image = cv.imread(img)
     
     # Convert the image to grayscale
-    gray_img = cv.cvtColor(image, cv.COLOR_BGR2GRAY)
+    gray_img = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
     
     # Apply Canny edge detection
     edges = cv.Canny(gray_img, 50, 150, apertureSize=3)
@@ -30,7 +30,7 @@ def task_1_a():
     # Perform Hough Line Transform
     lines = cv.HoughLines(edges, 1, np.pi/180, threshold=100)
     
-    # Draw the detected lines on the original image
+    # Draw the detected lines on the original img
     for line in lines:
         rho, theta = line[0]
         a = np.cos(theta)
@@ -41,10 +41,11 @@ def task_1_a():
         y1 = int(y0 + 1000 * (a))
         x2 = int(x0 - 1000 * (-b))
         y2 = int(y0 - 1000 * (a))
-        cv.line(image, (x1, y1), (x2, y2), (0, 0, 255), 2)
+        cv.line(img, (x1, y1), (x2, y2), (0, 0, 255), 2)
 
-    # Save the result image
-    cv.imwrite('detected_lines.png', image)
+    # Save the result img
+    cv.imwrite('detected_lines.png', img)
+    # display(image)
 
 
 '''
@@ -237,7 +238,9 @@ def task_3_c():
         for cluster_id, cluster in enumerate(kmeans[1]):
             cluster_indices = np.where(indices == cluster_id)
             img_copy[cluster_indices] = cluster[0:3]
-
+        # Reshape Image to original shape and display
+        img_copy = img_copy.reshape(img.shape[0], img.shape[1], 3)
+        display(img_copy)
 
 
 def task_3_d():
@@ -262,29 +265,63 @@ def meanShift(data, window_size, kernel, x1, y1):
     :param x1, y1: original position (x1, y1)
     :return: shifted position (x2, y2) and sum of weights within the window
     """
-    x2 = None
-    y2 = None
-    sum_w = None
-    '''
-    ...
-    your code ...
-    ...
-    '''
+    x2 = x1
+    y2 = y1
+    sum_w = 0.0 
+
+    for i in data:
+        # calculating the distance from the current point to the original point
+        distance = np.sqrt((i[0] - x1)**2 + (i[1] - y1)**2)
+
+        # checking if the distance is within the window size
+        if distance <= window_size:
+            # calculating the weight
+            weight = kernel(distance)
+            # calculating the sum of weights
+            sum_w += weight
+            # calculating the shifted position
+            x2 += i[0] * weight
+            y2 += i[1] * weight
+
+    # calculating the final shifted position after normalization
+    x2 /= sum_w
+    y2 /= sum_w
+    
     return x2, y2, sum_w
 
 def task_4_a():
     print("Task 4 (a) ...")
     img = cv.imread('../images/line.png')
-    img_gray = None # convert the image into grayscale
-    edges = None # detect the edges
-    theta_res = None # set the resolution of theta
-    d_res = None # set the distance resolution
-    #_, accumulator = myHoughLines(edges, d_res, theta_res, 50)
-    '''
-    ...
-    your code ...
-    ...
-    '''
+    img_gray = cv.cvtColor(img, cv.COLOR_BGR2GRAY)
+    edges = cv.Canny(img_gray, 50, 150, apertureSize=3)
+    theta_res = np.pi / 180
+    d_res = 1
+    # img_gray = None # convert the image into grayscale
+    # edges = None # detect the edges
+    # theta_res = None # set the resolution of theta
+    # d_res = None # set the distance resolution
+    _, accumulator = myHoughLines(edges, d_res, theta_res, 50)
+
+    # finding the peaks using mean shift
+    peaks = []
+    for i in range(accumulator.shape[0]):
+        for j in range(accumulator.shape[1]):
+            # calculating the shifted position and sum of weights
+            x2, y2, sum_w = meanShift(accumulator, 5, lambda x: np.exp(-x**2/2), i, j) # kernel used = gaussian
+            peaks.append((x2, y2))
+
+    # plotting the accumulator
+    plt.imshow(accumulator, cmap='gray')
+    plt.title('Hough Transform Accumulator')
+    plt.show()
+
+    # plotting the peaks
+    plt.imshow(img_gray, cmap='gray')
+    plt.scatter([i[1] for i in peaks], [i[0] for i in peaks], c='r', s=5)
+    plt.title('Detected Peaks')
+    plt.show()
+    
+    
 
 def task_4_b():
     print("Task 4 (b) ...")
@@ -300,9 +337,10 @@ def task_4_b():
 ##############################################
 
 if __name__ == "__main__":
-    #task_1_a()
+    # task_1_a()
     task_1_b() 
-    task_3_a() 
-    task_3_b() 
-    task_3_c()
+    # task_3_a() 
+    # task_3_b() 
+    # task_3_c()
+    # task_4_a()
     
