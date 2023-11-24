@@ -10,7 +10,7 @@ def calculate_degree_matrix(W):
     :return: degree matrix
     """
     # Computing the sum of each column in W
-    column_sums = np.sum(W, axis=0)
+    column_sums = np.sum(W, axis=1)
 
     # Creating the degree matrix D which is a diagonal matrix where
     # each diagonal element D_ii is the sum of the
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         [1.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0.0, 0.0],
         [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
         [0.0, 0.0, 1.0, 0.1, 0.0, 0.0, 1.0, 0.0],
-        [0.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 1.0],
         [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0]
     ], dtype=np.float32)
 
