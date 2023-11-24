@@ -4,6 +4,9 @@ import cv2 as cv
 # Task 4.1.1
 # function to compute the second smallest eigenvector of the affinity matrix W
 
+def calculate_degree_matrix(W):
+    # need to write this function
+    return None
 
 def second_smallest_eig_vec(W):
     """
@@ -11,9 +14,9 @@ def second_smallest_eig_vec(W):
     :return: second smallest eigenvector of W
     """
     # Computing the degree matrix D which is a diagonal matrix where
-    # each diagonal element Dii is the sum of the
+    # each diagonal element D_ii is the sum of the
     # elements of the ith row of the affinity matrix W.
-    D = np.diag(np.sum(W, axis=1))
+    D = np.diag(np.sum(W, axis=1)) # implement calculate_degree_matrix(W) here
     print("Degree matrix: \n", D)
 
     # calculating D^(-1/2)
