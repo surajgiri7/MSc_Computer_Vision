@@ -14,6 +14,7 @@ def second_smallest_eig_vec(W):
     # each diagonal element Dii is the sum of the
     # elements of the ith row of the affinity matrix W.
     D = np.diag(np.sum(W, axis=1))
+    print("Degree matrix: \n", D)
 
     # calculating D^(-1/2)
     D_sqrt_inv = np.sqrt(np.linalg.inv(D))
@@ -63,14 +64,14 @@ def compute_Ncut_and_clusters(W, eig_vec_y):
 if __name__ == "__main__":
     # At first creating the affinity matrix W based on the given graph
     W = np.array([
-        [0, 1, 0.2, 1, 0, 0, 0, 0],
-        [1, 0, 0.1, 0, 1, 0, 0, 0],
-        [0.2, 0.1, 0, 1, 0, 1, 0.3, 0],
-        [1, 0, 1, 0, 0, 0.1, 0, 0],
-        [0, 1, 0, 0, 0, 0, 1, 1],
-        [0, 0, 1, 0.1, 0, 0, 1, 0],
-        [0, 0, 0.3, 0, 1, 1, 0, 0],
-        [0, 0, 0, 0, 1, 0, 1, 0]
+        [0.0, 1.0, 0.2, 1.0, 0.0, 0.0, 0.0, 0.0],
+        [1.0, 0.0, 0.1, 0.0, 1.0, 0.0, 0.0, 0.0],
+        [0.2, 0.1, 0.0, 1.0, 0.0, 1.0, 0.3, 0.0],
+        [1.0, 0.0, 1.0, 0.0, 0.0, 0.1, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0],
+        [0.0, 0.0, 1.0, 0.1, 0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0]
     ])
 
     # Computing the second smallest eigenvector of W
