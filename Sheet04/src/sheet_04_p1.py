@@ -5,19 +5,29 @@ import cv2 as cv
 # function to compute the second smallest eigenvector of the affinity matrix W
 
 def calculate_degree_matrix(W):
-    # need to write this function
-    return None
-
-def second_smallest_eig_vec(W):
     """
     :param W: affinity matrix
-    :return: second smallest eigenvector of W
+    :return: degree matrix
     """
-    # Computing the degree matrix D which is a diagonal matrix where
+    # Computing the sum of each column in W
+    column_sums = np.sum(W, axis=0)
+
+    # Creating the degree matrix D which is a diagonal matrix where
     # each diagonal element D_ii is the sum of the
     # elements of the ith row of the affinity matrix W.
-    D = np.diag(np.sum(W, axis=1)) # implement calculate_degree_matrix(W) here
-    print("Degree matrix: \n", D)
+    D = np.diag(column_sums)
+    return D
+
+
+def calculate_second_smallest_eig_vec(W):
+    """
+    :param W: affinity matrix
+    :return second_smallest_eig_val: second smallest eigenvalue of W
+    :return second_smallest_eig_vec: second smallest eigenvector of W
+    :return eig_vec_y: eigenvector in original form y
+    """
+    # Computing the degree matrix D of W
+    D = calculate_degree_matrix(W)
 
     # calculating D^(-1/2)
     D_sqrt_inv = np.sqrt(np.linalg.inv(D))
@@ -27,6 +37,8 @@ def second_smallest_eig_vec(W):
 
     # Calculating the eigenvector y using cv2.eigen
     state, eig_val, eig_vec = cv.eigen(W_norm)
+    print("Eigenvalues: \n", eig_val)
+    print("Eigenvectors: \n", eig_vec)
 
     # Getting the indices that would sort the eigenvalues in ascending order
     idx = np.argsort(eig_val, axis=0)
@@ -38,11 +50,7 @@ def second_smallest_eig_vec(W):
     # Converting the eigenvector to the original form using z = D^(-1/2) * y
     eig_vec_y = np.dot(D_sqrt_inv, second_smallest_eig_vec)
 
-    print("Second smallest eigenvalue: \n", second_smallest_eig_val)
-    print("Second smallest eigenvector: \n", second_smallest_eig_vec)
-    print("Second smallest eigenvector in original form: \n", eig_vec_y)
-
-    return eig_vec_y
+    return second_smallest_eig_val, second_smallest_eig_vec, eig_vec_y
 
 
 def compute_Ncut_and_clusters(W, eig_vec_y):
@@ -75,18 +83,23 @@ if __name__ == "__main__":
         [0.0, 0.0, 1.0, 0.1, 0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.3, 0.0, 1.0, 1.0, 0.0, 0.0],
         [0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0]
-    ])
+    ], dtype=np.float32)
 
+    D = calculate_degree_matrix(W)
+    print("Affinity matrix W: \n", W)
+    print("Degree matrix D: \n", D)
     # Computing the second smallest eigenvector of W
-    second_smallest_eig_vec(W)
+    second_smallest_eig_val, second_smallest_eig_vec, eig_vec_y = calculate_second_smallest_eig_vec(W)
+    print("Second smallest eigenvalue: \n", second_smallest_eig_val)
+    print("Second smallest eigenvector: \n", second_smallest_eig_vec)
+    print("Second smallest eigenvector in original form: \n", eig_vec_y)
+
 
     # Computing the Ncut value and clusters
-    eig_vec_y = second_smallest_eig_vec(W)
+    # eig_vec_y = second_smallest_eig_vec(W)
     C1, C2, ncut = compute_Ncut_and_clusters(W, eig_vec_y)
-
     # creating the mapping from from numbers to original labels
     mapping = {0: "A", 1: "B", 2: "C", 3: "D", 4: "E", 5: "F", 6: "G", 7: "H"}
-
     # Printing the clusters
     print("Cluster 1: ", [mapping[i] for i in C1])
     print("Cluster 2: ", [mapping[i] for i in C2])
