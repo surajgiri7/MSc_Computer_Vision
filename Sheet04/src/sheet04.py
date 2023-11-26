@@ -120,4 +120,4 @@ if __name__ == '__main__':
     optimal_params = optimize_parameters('../images/ball.png', radius=120, alpha_range=alpha_range, beta_range=beta_range)
 
     # Run with the optimal parameters
-    run_with_optimal_parameters('../images/ball.png',120, optimal_params)
+    run_with_optimal_parameters('./images/ball.png',120, optimal_params)
