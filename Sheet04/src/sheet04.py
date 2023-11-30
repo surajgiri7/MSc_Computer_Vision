@@ -48,10 +48,6 @@ def load_data(fpath, radius):
 
 # FUNCTIONS
 # ------------------------
-# your implementation here
-
-# ------------------------
-
 
 def calculate_derivative(img):
     img_blur = cv2.medianBlur(img, 15)
@@ -68,8 +64,8 @@ def calculate_energy(V, img_dx, img_dy, alpha):
     return ext_e, int_e
 
 def dynamic_programming(V, ext_e, int_e):
-    unary = []
-    for v in V:
+    unary = [] 
+    for v in V: 
         u = [{'ext': ext_e([x,y]), 'pos': np.array([x,y]), 'parent': None, 'acc': 0} 
              for x_offset in range(-1,2) for y_offset in range(-1,2) 
              for x, y in [(v[0] + x_offset, v[1] + y_offset)]]
@@ -86,6 +82,8 @@ def dynamic_programming(V, ext_e, int_e):
         V_new.insert(0, smallest_node['pos'])
     V_new.append(V_new.pop(0))
     return np.array(V_new[::-1])
+# ------------------------
+
 
 def run(fpath, radius):
     img, V = load_data(fpath, radius)
