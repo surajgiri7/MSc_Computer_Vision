@@ -14,6 +14,8 @@ def pairwise_cost(img, p1, p2, pairwise_cost_same, pairwise_cost_diff):
     return pairwise_cost_same if (img[p1[1],p1[0]] == img[p2[1],p2[0]]) else pairwise_cost_diff
 
 def unary_cost(img, p1, rho):
+    #warum 255 ? binary so betweem 0,255. 255 representing 1
+    # This is a common approach in optimization problems where costs are used, so -np.log(rho)
     return -np.log(1-rho) if (img[p1[1],p1[0]] == 255) else -np.log(rho)
 
 def add_edges(img, g, nodes, rho, pairwise_cost_same, pairwise_cost_diff):
@@ -47,34 +49,120 @@ def binary_img_denoiser(img, rho, pairwise_cost_same, pairwise_cost_diff):
 
 
 
-    
 
+def grayscale_img_denoiser(I,rho=0.6):
+    labels = np.unique(I).tolist()
 
+    Denoised_I = np.zeros_like(I)
+    Denoised_I = I.copy()
+    ### Use Alpha expansion binary image for each label
+    #I = I/I.max()
+    num_labels = len(labels)
+    D = np.abs(I.reshape(I.shape + (1,)) - np.array(labels).reshape((1, 1, -1)))
+    D = np.where(D == 0, rho, (1-rho)/2)
+    V = 255 * np.eye(3)
 
+    max_iter = 50
+    better_energy = np.inf
+    # Stop when energy is not changed or reached max iteration.
+    for i in range(max_iter):
+        improved = False
+        # Iterate through the labels.
+        for alpha in labels:
+            # Create graph and Caculate the energy.
+            energy, Denoised_I = calculate_energy(alpha, D, V, Denoised_I, rho)
+            # Check if the better energy has been improved.
+            if energy < better_energy:
+                better_energy = energy
+                improved = True
+        # Finish the minimization when energy is not decreased.
+        if not improved:
+            break
 
-def grayscale_img_denoiser(img, rho):
-    """
+    cv2.imshow('Original Img', I), \
+    cv2.imshow('Denoised Img', Denoised_I), cv2.waitKey(0), cv2.destroyAllWindows()
 
-    :param img:
-    :param rho:
-    :return:
-    """
-    labels = np.unique(img)
+    return
 
-    denoised_img = np.zeros_like(img)
-    # Use Alpha expansion binary image for each label
+def calculate_energy(alpha, D, V, Denoised_I, rho):
+    ### 1) Define Graph
+    g = maxflow.Graph[float]()
 
-    # 1) Define Graph
+    row, col = Denoised_I.shape
+    ### 2) Add pixels as nodes
+    nodeids = g.add_grid_nodes((row, col))
+    ### 3) Compute Unary cost
+    ### 4) Add terminal edges
+    #g.add_grid_tedges(nodeids, rho, (1-rho)/2)
+    label_dict = {0:0, 128:1, 255:2}
 
-    # 2) Add pixels as nodes
+    ### 5) Add Node edges
+    ### Vertical Edges
+    for c in range(col):
+        for r in range(row-1):
+            curr_state = Denoised_I[r, c]
+            if curr_state == alpha:
+                # Add unary cost from label to source and sink
+                g.add_tedge(nodeids[r, c], D[r,c,label_dict[alpha]], np.inf)
+                if Denoised_I[r+1, c] != alpha: # for alpha and else
+                    dist_state_alpha = V[label_dict[Denoised_I[r+1, c]], label_dict[alpha]]
+                    g.add_edge(nodeids[r, c], nodeids[r+1, c], 0, dist_state_alpha)
+            else:
+                g.add_tedge(nodeids[r, c], D[r,c,label_dict[alpha]], D[r,c,label_dict[curr_state]])
+                if Denoised_I[r+1, c] == alpha: # for else and alpha
+                    dist_state_alpha = V[label_dict[Denoised_I[r, c]], label_dict[alpha]]
+                    g.add_edge(nodeids[r, c], nodeids[r+1, c], dist_state_alpha, 0)
+                else: # for else and else
+                    if Denoised_I[r, c] == Denoised_I[r+1, c]:
+                        dist_state_alpha = V[label_dict[Denoised_I[r, c]], label_dict[Denoised_I[r+1, c]]]
+                        g.add_edge(nodeids[r, c], nodeids[r + 1, c], dist_state_alpha, dist_state_alpha)
+                    else:
+                        dist = V[label_dict[Denoised_I[r, c]], label_dict[Denoised_I[r+1, c]]]
+                        curr = V[label_dict[Denoised_I[r, c]], label_dict[alpha]]
+                        next = V[label_dict[Denoised_I[r+1, c]], label_dict[alpha]]
+                        # Add an extra node between two nodes that both are not alpha
+                        extra_node = g.add_nodes(1)
+                        g.add_tedge(extra_node, 0, dist)
+                        g.add_edge(nodeids[r, c], extra_node, curr, np.inf)
+                        g.add_edge(nodeids[r+1, c], extra_node, np.inf, next)
+    ### Horizontal edges
+    # (Keep in mind the stucture of neighbourhood and set the weights according to the pairwise potential)
+    for r in range(row):
+        for c in range(col - 1):
+            curr_state = Denoised_I[r, c]
+            if curr_state == alpha:
+                if Denoised_I[r, c+1] != alpha:
+                    dist_state_alpha = V[label_dict[alpha], label_dict[Denoised_I[r, c+1]]]
+                    g.add_edge(nodeids[r, c], nodeids[r, c+1], 0, dist_state_alpha)
+            else:
+                if Denoised_I[r, c+1] == alpha:
+                    dist_state_alpha = V[label_dict[Denoised_I[r, c]], label_dict[alpha]]
+                    g.add_edge(nodeids[r, c], nodeids[r, c+1], dist_state_alpha, 0)
+                else:
+                    if Denoised_I[r, c] == Denoised_I[r, c+1]:
+                        dist_state_alpha = V[label_dict[Denoised_I[r, c]], label_dict[Denoised_I[r, c+1]]]
+                        g.add_edge(nodeids[r, c], nodeids[r, c+1], dist_state_alpha, dist_state_alpha)
+                    else:
+                        dist = V[label_dict[Denoised_I[r, c]], label_dict[Denoised_I[r, c+1]]]
+                        curr = V[label_dict[Denoised_I[r, c]], label_dict[alpha]]
+                        next = V[label_dict[Denoised_I[r, c+1]], label_dict[alpha]]
+                        extra_node = g.add_nodes(1)
+                        g.add_tedge(extra_node, 0, dist)
+                        g.add_edge(nodeids[r, c], extra_node, curr, np.inf)
+                        g.add_edge(nodeids[r, c+1], extra_node, np.inf, next)
 
-    # 3) Compute Unary cost
+    ### 6) Maxflow
+    energy = g.maxflow()
 
-    # 4) Add terminal edges
+    segments = g.get_grid_segments(nodeids)
+    segments = np.logical_not(segments)
+    for i in range(row):
+        for j in range(col):
+            if segments[i,j]:
+                Denoised_I[i, j] = alpha
 
-    # 5) Add Node edges
+    return energy, Denoised_I
 
-    # 6) Maxflow
 
 
 def main():
@@ -85,7 +173,9 @@ def main():
     pairwise_cost_same_values = np.arange(0.0, 1, step=0.1)
     pairwise_cost_diff_values = np.arange(0.0, 1, step=0.1)
 
+
     # Test binary_img_denoiser with different values
+    """
     for theta_s in pairwise_cost_same_values:
         for theta_d in pairwise_cost_diff_values:
             denoised_output = binary_img_denoiser(image_binary, rho, theta_s, theta_d)
@@ -93,6 +183,8 @@ def main():
             cv2.imshow(f'Original Image', image_binary)
             cv2.imshow(f'Denoised Output (rho={rho}, theta_s={theta_s}, theta_d={theta_d})', denoised_output)
             cv2.waitKey(0)
+    """
+    grayscale_img_denoiser(image_grayscale,rho=0.6)
 
 
     """
