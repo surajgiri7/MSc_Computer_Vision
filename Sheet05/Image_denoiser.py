@@ -241,8 +241,15 @@ def main():
             cv2.imshow(f'Denoised Output (rho={rho}, theta_s={theta_s}, theta_d={theta_d})', denoised_output)
             cv2.waitKey(0)
     """
-    # grayscale_img_denoiser(image_grayscale,rho=0.6)
 
+    
+    denoised_output = grayscale_img_denoiser(image_grayscale, rho)
+    cv2.imshow(f'Original Image', image_binary)
+    cv2.imshow(f'Denoised Output ', denoised_output)
+    cv2.waitKey(0)
+    
+
+    """
     for theta_s in pairwise_cost_same_values:
         for theta_d in pairwise_cost_diff_values:
             denoised_output = grayscale_img_denoiser(image_grayscale, rho)
@@ -250,7 +257,7 @@ def main():
             cv2.imshow(f'Original Image', image_binary)
             cv2.imshow(f'Denoised Output (rho={rho}, theta_s={theta_s}, theta_d={theta_d})', denoised_output)
             cv2.waitKey(0)
-
+    """
 
     """
     Some notes on question 3
