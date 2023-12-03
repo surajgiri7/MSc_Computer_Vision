@@ -86,13 +86,14 @@ def main():
     pairwise_cost_diff_values = np.arange(0.0, 1, step=0.1)
 
     # Test binary_img_denoiser with different values
-    for pairwise_cost_same in pairwise_cost_same_values:
-        for pairwise_cost_diff in pairwise_cost_diff_values:
-            denoised_output = binary_img_denoiser(image_binary, rho, pairwise_cost_same, pairwise_cost_diff)
-            # Display or save denoised images
-            cv2.imshow(f'Denoised Output (rho={rho}, pairwise_cost_same={pairwise_cost_same}, pairwise_cost_diff={pairwise_cost_diff})', denoised_output)
+    for theta_s in pairwise_cost_same_values:
+        for theta_d in pairwise_cost_diff_values:
+            denoised_output = binary_img_denoiser(image_binary, rho, theta_s, theta_d)
+            # Display or save original and denoised images
+            cv2.imshow(f'Original Image', image_binary)
+            cv2.imshow(f'Denoised Output (rho={rho}, theta_s={theta_s}, theta_d={theta_d})', denoised_output)
             cv2.waitKey(0)
-            cv2.destroyAllWindows()
+
 
     """
     Some notes on question 3
