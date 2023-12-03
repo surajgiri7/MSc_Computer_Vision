@@ -41,7 +41,7 @@ def binary_img_denoiser(img, rho, pairwise_cost_same, pairwise_cost_diff):
     Denoised_I = img.copy().astype(np.float32)
     for y in range(img.shape[0]):
         for x in range(img.shape[1]):
-            Denoised_I[y,x] = g.get_segment(nodes[index(img, x, y)[0]])
+            Denoised_I[y,x] = 1 - g.get_segment(nodes[index(img, x, y)[0]])
 
     return Denoised_I
 
