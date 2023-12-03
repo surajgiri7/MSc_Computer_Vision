@@ -5,70 +5,44 @@ import numpy as np
 import maxflow
 
 
+def index(img, x, y):
+    if x >= img.shape[1] or x < 0 or y >= img.shape[0] or y < 0:
+        return None
+    return (img.shape[1]*y+x, (x,y))
 
+def pairwise_cost(img, p1, p2, pairwise_cost_same, pairwise_cost_diff):
+    return pairwise_cost_same if (img[p1[1],p1[0]] == img[p2[1],p2[0]]) else pairwise_cost_diff
 
+def unary_cost(img, p1, rho):
+    return -np.log(1-rho) if (img[p1[1],p1[0]] == 255) else -np.log(rho)
 
-def binary_img_denoiser(img, rho, pairwise_cost_same, pairwise_cost_diff):
-    """
-
-    :param img:
-    :param rho:
-    :param pairwise_cost_same:
-    :param pairwise_cost_diff:
-    :return:
-    """
-   ### 1) Define Graph
-    size = img.shape[0] * img.shape[1]
-    g = maxflow.Graph[float](size, size * 4)
-
-    ### 2) Add pixels as nodes
-    nodes = g.add_nodes(size)
-
-    def index(x,y):
-        if x >= img.shape[1] or x < 0 or y >= img.shape[0] or y < 0:
-            return None
-        return (img.shape[1]*y+x, (x,y))
-
-    def pairwise_cost(p1,p2):
-        return pairwise_cost_same if (img[p1[1],p1[0]] == img[p2[1],p2[0]]) else pairwise_cost_diff
-
-    def unary_cost(p1):
-        return -np.log(1-rho) if (img[p1[1],p1[0]] == 255) else -np.log(rho)
-
-
-    ### 3) Compute Unary cost
-    ### 4) Add terminal edges
-    ### 5) Add Node edges
-
+def add_edges(img, g, nodes, rho, pairwise_cost_same, pairwise_cost_diff):
     for y in range(img.shape[0]):
         for x in range(img.shape[1]):
-            # get node indices for current node / left / right / top / bot
-            i, il, ir, it, ib = index(x,y), index(x-1,y), index(x+1,y), index(x,y-1), index(x,y+1)
+            i, il, ir, it, ib = index(img, x, y), index(img, x-1, y), index(img, x+1, y), index(img, x, y-1), index(img, x, y+1)
 
-            ### Horizontal edges
-            #if il is not None:
-            #    g.add_edge(nodes[i[0]],nodes[il[0]], pairwise_cost(i[1],il[1]), pairwise_cost(i[1],il[1]))
             if ir is not None:
-                g.add_edge(nodes[i[0]], nodes[ir[0]], pairwise_cost(i[1],ir[1]), pairwise_cost(i[1],ir[1]))
-            ### Vertical Edges
-            #if it is not None:
-            #    g.add_edge(nodes[i[0]],nodes[it[0]], pairwise_cost(i[1],it[1]), pairwise_cost(i[1],it[1]))
+                g.add_edge(nodes[i[0]], nodes[ir[0]], pairwise_cost(img, i[1],ir[1], pairwise_cost_same, pairwise_cost_diff), pairwise_cost(img, i[1],ir[1], pairwise_cost_same, pairwise_cost_diff))
+
             if ib is not None:
-                g.add_edge(nodes[i[0]],nodes[ib[0]], pairwise_cost(i[1],ib[1]), pairwise_cost(i[1],ib[1]))
+                g.add_edge(nodes[i[0]],nodes[ib[0]], pairwise_cost(img, i[1],ib[1], pairwise_cost_same, pairwise_cost_diff), pairwise_cost(img, i[1],ib[1], pairwise_cost_same, pairwise_cost_diff))
 
-            g.add_tedge(nodes[i[0]], 1-unary_cost(i[1]), unary_cost(i[1]))
-    
+            g.add_tedge(nodes[i[0]], 1-unary_cost(img, i[1], rho), unary_cost(img, i[1], rho))
 
-    ### 6) Maxflow
+def binary_img_denoiser(img, rho, pairwise_cost_same, pairwise_cost_diff):
+    size = img.shape[0] * img.shape[1]
+    g = maxflow.Graph[float](size, size * 4)
+    nodes = g.add_nodes(size)
+
+    add_edges(img, g, nodes, rho, pairwise_cost_same, pairwise_cost_diff)
+
     g.maxflow()
 
-    # Graph cut denoise image
     Denoised_I = img.copy().astype(np.float32)
     for y in range(img.shape[0]):
         for x in range(img.shape[1]):
-            Denoised_I[y,x] = g.get_segment(nodes[index(x,y)[0]])
+            Denoised_I[y,x] = g.get_segment(nodes[index(img, x, y)[0]])
 
-    
     return Denoised_I
 
 
