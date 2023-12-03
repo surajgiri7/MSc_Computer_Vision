@@ -266,5 +266,16 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
+    """
+        3.2.1 as the theta_s increases with the theta_d the noise is reduced but it is 
+        really hard to see the image structure 
+        3.2.2 till theta_s <= 0.2 with any theta_ds the image is very nosiy the image starts to better 
+        and less noisy as theta_s = 0.3 and theta_d = 0.6, as we increase the theta_s from 0.3 until theta_s is 
+        not 0.6 the image is very noisy. But as theta_s incrases the image structure is deformed. If one has to
+        conclude, it can be said that the best combination is from theta_s >= 0.3 and theta_s <= 0.4 where 
+        theta_d >= 0.6. Also the image gets very distored. 
+    
+    """
 
 
