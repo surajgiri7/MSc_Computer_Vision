@@ -122,6 +122,7 @@ def add_t_edge(g, nodeids, Denoised_I, label_dict, V, alpha, r, c, rho, D):
 
 
 
+
 def main():
     image_binary = cv2.imread('./images/noisy_binary_img.png', cv2.IMREAD_GRAYSCALE)
     image_grayscale = cv2.imread('./images/noisy_grayscale_img.png', cv2.IMREAD_GRAYSCALE)
@@ -132,7 +133,6 @@ def main():
 
 
     # Test binary_img_denoiser with different values
-    """
     for theta_s in pairwise_cost_same_values:
         for theta_d in pairwise_cost_diff_values:
             denoised_output = binary_img_denoiser(image_binary, rho, theta_s, theta_d)
@@ -140,7 +140,7 @@ def main():
             cv2.imshow(f'Original Image', image_binary)
             cv2.imshow(f'Denoised Output (rho={rho}, theta_s={theta_s}, theta_d={theta_d})', denoised_output)
             cv2.waitKey(0)
-    """
+    
     grayscale_img_denoiser(image_grayscale,rho=0.6)
 
 
@@ -158,5 +158,17 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    """
+        3.2.1 as the theta_s increases with the theta_d the noise is reduced but it is 
+        really hard to see the image structure 
+        3.2.2 till theta_s <= 0.2 with any theta_ds the image is very nosiy the image starts to better 
+        and less noisy as theta_s = 0.3 and theta_d = 0.6, as we increase the theta_s from 0.3 until theta_s is 
+        not 0.6 the image is very noisy. But as theta_s incrases the image structure is deformed. If one has to
+        conclude, it can be said that the best combination is from theta_s >= 0.3 and theta_s <= 0.4 where 
+        theta_d >= 0.6. Also the image gets very distored. 
+    
+    """
+
 
 
