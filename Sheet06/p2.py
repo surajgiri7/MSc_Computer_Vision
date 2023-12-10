@@ -129,6 +129,7 @@ class GMM(object):
         self.mue = mue
         self.sigma = sigma
         self.lamb = lamb
+        
         pass
 
 

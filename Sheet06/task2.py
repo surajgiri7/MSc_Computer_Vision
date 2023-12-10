@@ -9,32 +9,31 @@ import cv2 as cv
     background/foreground: numpy array of size (n_pixels, 3) (3 for RGB values), i.e. the data you need to train the GMM
 '''
 
+
 def read_image(filename):
-    image = cv.imread(filename) / 255.0
+    image = cv.imread(filename) / 255.0 
     height, width = image.shape[:2]
     bounding_box = np.zeros(image.shape)
     bounding_box[90:350, 110:250, :] = 1
     bb_width, bb_height = 140, 260
-    background = image[bounding_box == 0].reshape((height * width - bb_width * bb_height, 3))
+    background = image[bounding_box == 0].reshape(
+        (height * width - bb_width * bb_height, 3))
     foreground = image[bounding_box == 1].reshape((bb_width * bb_height, 3))
-   
+
     return image, foreground, background
 
 # https://math.stackexchange.com/questions/434629/3-d-generalization-of-the-gaussian-point-spread-function
 def pdf(x, mu, sigma):
-    # Calculate the numerator of the PDF formula
-    diff = x - mu.reshape(1, mu.shape[0])
-    scaled_diff = diff ** 2 / sigma.reshape(1, sigma.shape[0])
-    numerator = np.exp(-0.5 * np.sum(scaled_diff, axis=1))
+    numerator = np.exp(-0.5 *
+                       np.sum(
+                           (x-mu.reshape(1, mu.shape[0])) ** 2 *
+                           (1/(sigma.reshape(1, sigma.shape[0]))), axis=1)
+                       )
+    denominator = np.sqrt(((2*np.pi) ** 3) * np.prod(sigma))
+    return numerator/denominator
 
-    # Calculate the denominator of the PDF formula
-    denominator = np.sqrt((2 * np.pi) ** mu.shape[0] * np.prod(sigma))
 
-    # Return the PDF
-    return numerator / denominator
-
-class GMM(object): 
-
+class GMM(object):
 
     def __init__(self, image, foreground, background):
         self.image = image
@@ -42,20 +41,18 @@ class GMM(object):
         self.background = background
         self.data = None
         self.mu = None
-        self.sigma = None 
+        self.sigma = None
         self.cov = None
         self.weight = np.ones(1)
 
-    
-    
+    def gaussian_scores(self, data):
 
+        pass
 
-    def fit_single_gaussian(self, data): 
-        mu = np.mean(data,axis=0) 
-        cov = np.diag(np.var(data, axis=0)) 
+    def fit_single_gaussian(self, data):
+        mu = np.mean(data, axis=0)
+        cov = np.var(data, axis=0)
         return mu, cov
-
-
 
     def estep(self):
         r = np.zeros((self.data.shape[0], self.mu.shape[0]))
@@ -63,7 +60,7 @@ class GMM(object):
 
         # Calculate PDF values and denominator
         for k in range(self.mu.shape[0]):
-            pdf_values[:, k] += self.weight[k] * pdf(self.data, self.mu[k], self.sigma[k])
+            pdf_values[:, k] = self.weight[k] * pdf(self.data, self.mu[k], self.sigma[k])
         denominator = np.sum(pdf_values, axis=1)
 
         # Calculate responsibilities
@@ -73,88 +70,69 @@ class GMM(object):
         return r
 
     def mstep(self, r):
+        weight = r.sum()
+
         for k in range(self.mu.shape[0]):
-            r_sum = r[:, k].sum()
-            
-            # Update weight
-            self.weight[k] = r_sum / r.sum()
-            
-            # Update mean
-            weighted_data = r[:, k][:, np.newaxis] * self.data
-            self.mu[k] = np.sum(weighted_data, axis=0) / r_sum
-            
-            # Update covariance matrix (sigma)
+            r_sum = r[:,k].sum()
+            print("|||||")
+            print(weight)
+            self.weight[k] = r_sum / weight
+            self.mu[k] = np.sum(r[:,k].reshape(r.shape[0], 1) * self.data, axis=0) / r_sum
             diff = self.data - self.mu[k]
-            squared_diff = np.power(diff, 2)
-            self.sigma[k] = np.sum(r[:, k] * np.sum(squared_diff, axis=1)) / r_sum
+            self.sigma[k] = np.sum(r[:, k] * (diff ** 2).sum(axis=1)) / r_sum
 
     def em_algorithm(self, tau=0.8):
-        # Initialize GMM parameters using fit_single_gaussian
-        mu, sigma = self.fit_single_gaussian(self.background)
+        self.initialize_parameters(self.background)
+        self.train(self.background)
+        prob = self.probability(self.image)
+        self.segment_image(prob, tau)
+        self.display_image(self.image.astype(np.uint8))
+
+    def initialize_parameters(self, data):
+        mu, sigma = self.fit_single_gaussian(data)
         self.mu = np.array([mu])
         self.sigma = np.array([sigma])
 
-        # Train the GMM on the given data
-        self.train(self.background)
+    def probability(self, image):
+        flattened_image = image.reshape(image.shape[0] * image.shape[1], 3)
+        prob = np.zeros(flattened_image.shape[0])
+        for k in range(self.mu.shape[0]):
+            prob += self.weight[k] * pdf(flattened_image, self.mu[k], self.sigma[k])
+        return prob.reshape(image.shape[0], image.shape[1]) / prob.max()
 
-        prob = self.probability(self.data)
-
+    def segment_image(self, prob, tau):
         indices = np.where(prob > tau)
+        self.image *= 255
+        self.image = cv.cvtColor(self.image.astype(np.uint8), cv.COLOR_HSV2BGR)
+        self.image[indices] = [0,0,0]
 
-        # Manipulate the image based on the probabilities
-        data *= self.image
-        data = cv.cvtColor(data.astype(np.uint8), cv.COLOR_HSV2BGR)
-        data[indices] = [0, 0, 0]
-        self.image = data
+    def display_image(self, img):
+        cv.imshow('image', img)
+        cv.waitKey(0)
+        cv.destroyAllWindows()
 
-
-
-
-    def split(self, epsilon=0.1):
-        new_mu = []
-        new_sigma = []
-        new_weight = []
+    def split(self, epsilon = 0.1):
+        mu = np.zeros((self.mu.shape[0] * 2, self.mu.shape[1]))
+        sigma = np.zeros((self.sigma.shape[0] * 2, self.sigma.shape[1]))
+        weight = np.zeros(self.weight.shape[0] * 2)
 
         for i in range(self.mu.shape[0]):
-            mu_i = self.mu[i]
-            sigma_i = self.sigma[i]
-            weight_i = self.weight[i]
+            mu_i, sigma_i, weight_i = self.mu[i], self.sigma[i], self.weight[i]
+            mu[2*i], mu[2*i+1] = mu_i + sigma_i * epsilon, mu_i - sigma_i * epsilon
+            sigma[2*i], sigma[2*i+1] = sigma_i, sigma_i
+            weight[2*i], weight[2*i+1] = weight_i / 2, weight_i / 2
 
-            mu_1, mu_2 = mu_i + sigma_i * epsilon, mu_i - sigma_i * epsilon
-            sigma_1, sigma_2 = sigma_i, sigma_i
-            weight_2, weight_1 = weight_i / 2, weight_i / 2
-
-            new_mu.extend([mu_1, mu_2])
-            new_sigma.extend([sigma_1, sigma_2])
-            new_weight.extend([weight_1, weight_2])
-
-        self.mu = np.array(new_mu).reshape(-1, 3)
-        self.sigma = np.array(new_sigma).reshape(-1, 3)
-        self.weight = np.array(new_weight)
-
-
-            
-
-    def probability(self, data):
-        probabilities = np.zeros(data.shape[0] * data.shape[1])
-        for k in range(self.mu.shape[0]):
-            probabilities += self.weight[k] * pdf(data.reshape(data.shape[0] * data.shape[1], 3), self.mu[k], self.sigma[k])
-        probabilities = probabilities.reshape(data.shape[0], data.shape[1])
-        return probabilities / probabilities.max()
-
+        self.mu, self.sigma, self.weight = mu, sigma, weight
 
     def sample(self):
         # TODO
         pass
 
-
-    def train(self, data, n_iterations=10, n_splits=3):
+    def train(self, data, n_iterations=10, k_splits=3):
         self.data = data
-
         for i in range(n_iterations):
-            if i < n_splits:
+            if i < k_splits:
                 self.split()
-
             responsibilities = self.estep()
             self.mstep(responsibilities)
 
@@ -167,5 +145,5 @@ if __name__ == '__main__':
     TODO: compute p(x|w=background) for each image pixel and manipulate the image such that everything below the threshold is black, display the resulting image
     Hint: Slide 64
     '''
-gmm_background = GMM(image, foreground, background)
-gmm_background.em_algorithm(image)
+    gmm_background = GMM(image, foreground, background)
+    gmm_background.em_algorithm()
