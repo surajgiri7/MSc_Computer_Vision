@@ -21,16 +21,30 @@ def read_image(filename):
     return image, foreground, background
 
 
-class GMM(object):
+class GMM(object): 
+
+
+    def __init__(self, image, foreground, background):
+        self.image = image
+        self.foreground = foreground
+        self.background = background
+        self.data = None
+        self.mu = None
+        self.sigma = None 
+        self.cov = None
+        self.weight = np.ones(1)
+
 
     def gaussian_scores(self, data):
-        # TODO
+        
         pass
 
 
-    def fit_single_gaussian(self, data):
-        # TODO
-        pass
+    def fit_single_gaussian(self, data): 
+        mu = np.mean(data,axis=0) 
+        cov = np.diag(np.var(data, axis=0)) 
+        return mu, cov
+
 
 
     def estep(self, data):
@@ -47,10 +61,41 @@ class GMM(object):
         pass
 
 
-    def split(self, epsilon = 0.1):
-        # TODO
-        pass
+    def split(self, epsilon=0.1):
+        
+        pi_k = []
+        mu_list = []
+        cov_mat = []
+        sigma_list = []
 
+        for x in range(len(self.mu)):
+            # Generate two new means
+            mu_1 = self.mu[x] + epsilon * self.sigma[x]
+            mu_2 = self.mu[x] - epsilon * self.sigma[x]
+
+            # Append the new means to the list
+            mu_list.append(mu_1)
+            mu_list.append(mu_2)
+
+            # Duplicate the weight and divide by 2
+            pi_k.append(self.weight[x] / 2)
+            pi_k.append(self.weight[x] / 2)
+
+            # Duplicate the diagonal covariance matrix
+            cov_mat.append(np.diag(self.cov[x]))
+            cov_mat.append(np.diag(self.cov[x]))
+
+            # Append the original standard deviation to the list
+            sigma_list.append(self.sigma[x])
+            sigma_list.append(self.sigma[x])
+
+        # Update GMM parameters
+        self.mu = np.array(mu_list)
+        self.sigma = np.array(sigma_list)
+        self.weight = np.array(pi_k)
+        self.cov = np.array(cov_mat)
+
+            
 
     def probability(self, data):
         # TODO
