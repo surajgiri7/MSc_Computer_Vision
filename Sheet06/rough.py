@@ -34,7 +34,7 @@ class GMM(object):
         self.weight = np.ones(1)
 
 
-    def gaussian_scores(self, data):
+    def gaussian_scores(self):
         
         # pass
         """
@@ -44,8 +44,8 @@ class GMM(object):
         for i in range(len(self.mu)):
             mean = self.mu[i]
             cov = self.cov[i]
-            diff = data - mean
-            score = np.exp(-0.5 * np.sum(np.dot(diff, np.linalg.inv(cov)) * diff, axis=1)) / np.sqrt(np.linalg.det(cov))
+            diff = self.data[i] - mean
+            score = np.exp(-0.5 * np.sum(np.dot(diff, np.linalg.inv(cov)) * diff, axis=0))
             scores.append(score)
         return np.array(scores).T
 
@@ -155,3 +155,4 @@ if __name__ == '__main__':
     Hint: Slide 64
     '''
     gmm_background = GMM(image, foreground, background)
+    gmm_background.gaussian_scores()
