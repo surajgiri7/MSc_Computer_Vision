@@ -35,10 +35,7 @@ class KalmanFilter(object):
         # Covariance prediction
         covariance_pred = self.sigma_p + np.dot(np.dot(self.psi, self.covariance), np.transpose(self.psi))
         # Kalman Gain
-        kalman_gain1 = np.dot(covariance_pred, np.transpose(self.phi))
-        kalman_gain2 = np.dot(np.dot(self.phi, covariance_pred), np.transpose(self.phi))
-        kalman_gain3 = np.linalg.inv(self.sigma_m + kalman_gain2)
-        kalman_gain = np.dot(kalman_gain1, kalman_gain3)
+        kalman_gain = np.dot(np.dot(covariance_pred, np.transpose(self.phi)), np.linalg.inv(self.sigma_m + np.dot(np.dot(self.phi, covariance_pred), np.transpose(self.phi))))
         # State update
         state_update = state_pred + np.dot(kalman_gain, (xt - np.dot(self.phi, state_pred)))
         # Covariance update
