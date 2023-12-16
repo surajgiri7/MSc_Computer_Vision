@@ -107,7 +107,7 @@ def main():
     ax = fig.add_subplot(111)
 
     fixed_lag_smoother = KalmanFilter(psi, sigma_p, phi, sigma_m, tau=5)
-    fixed_lag_smoother.init(np.array([0, 1, 0, 0]))
+    fixed_lag_smoother.init(np.array([-10,-150,1,-2]))
 
     track_smoothed = perform_tracking(fixed_lag_smoother)
 
