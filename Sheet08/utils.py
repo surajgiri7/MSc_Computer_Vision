@@ -38,6 +38,10 @@ def convert_samples_to_xy(data_matrix):
 
     kpts = np.asarray([X, Y]).transpose([1, 2, 0])
 
+    # print("AAAAAAA")
+    # print(kpts.shape)
+    # print("AAAAAAA")
+
     return kpts
 
 

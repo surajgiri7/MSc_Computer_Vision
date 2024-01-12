@@ -24,11 +24,18 @@ def task_1():
     # calculate mean
     # ToDO
     mean_shape = task1.calculate_mean_shape(kpts)
+    print("|||||" * 6)
+    print("Mean Shape:")
+    print(mean_shape)
+    print(mean_shape.shape)
+    print("|||||" * 6)
     # return mean_shape
 
     # we want to visualize the data first
     # ToDO
-    utils.visualize_hands(utils.convert_samples_to_xy(kpts), "Before Aligned", delay=0.1)
+    utils.visualize_hands(utils.convert_samples_to_xy(kpts), "Shapes Before Alignment", delay=0.1)
+    utils.visualize_hands(utils.convert_samples_to_xy(mean_shape), "Mean Shape before Alignment", delay=0.5)
+    task1.procrustres_analysis(kpts)
 
     # task1.procrustres_analysis(kpts)
 
