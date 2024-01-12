@@ -67,7 +67,7 @@ def compute_avg_error(kpts, mean_shape):
 
 # ============================ Procrustres ===============================
 
-def procrustres_analysis(kpts, max_iter=int(100)):
+def procrustres_analysis(kpts, max_iter=int(1e3), min_error=1e-5):
     kpts_array = utils.convert_samples_to_xy(kpts)
     reference_mean = calculate_mean_shape(kpts_array)
     print("!!!!!" * 6)
