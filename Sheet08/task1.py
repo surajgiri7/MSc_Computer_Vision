@@ -6,7 +6,15 @@ import utils
 # ========================== Mean =============================
 def calculate_mean_shape(kpts):
     # ToDO
-    pass
+    # Convert list of keypoints to numpy array for easier manipulation
+    kpts_array = np.array(kpts)
+    
+    # Calculate mean along the first axis (i.e., for each coordinate across all shapes)
+    mean_shape = np.mean(kpts_array, axis=0)
+    mean_shape = np.expand_dims(mean_shape, axis=0)
+    
+    return mean_shape
+    # pass
 
 
 

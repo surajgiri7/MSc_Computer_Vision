@@ -13,6 +13,7 @@ def get_keypoints(path):
     data_info = utils.load_data(path)
 
     # Your part here
+    kpts =data_info['samples']
 
     return kpts
 
@@ -22,11 +23,14 @@ def task_1():
 
     # calculate mean
     # ToDO
+    mean_shape = task1.calculate_mean_shape(kpts)
+    # return mean_shape
 
     # we want to visualize the data first
     # ToDO
+    utils.visualize_hands(utils.convert_samples_to_xy(kpts), "Before Aligned", delay=0.1)
 
-    task1.procrustres_analysis(kpts)
+    # task1.procrustres_analysis(kpts)
 
 
 def task_2_1():
@@ -51,11 +55,19 @@ def task_2_2(mean, pcs, pc_weights):
     time.sleep(20)
 
 if __name__ == '__main__':
+    # Orig Sol
     print("Running Task 1")
+    # print(task_1())
+    # print(task_1().shape)
     task_1()
 
-    print("Running Task 2.1")
-    mean, pcs, pc_weights = task_2_1()
+    # print("Running Task 2.1")
+    # mean, pcs, pc_weights = task_2_1()
 
-    print("Running Task 2.2")
-    task_2_2(mean, pcs, pc_weights)
+    # print("Running Task 2.2")
+    # task_2_2(mean, pcs, pc_weights)
+    # Orig Sol
+
+    # print("Test")
+    # print(get_keypoints(hands_aligned_train).shape)
+    # print(get_keypoints(hands_aligned_train))
