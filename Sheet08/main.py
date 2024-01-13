@@ -49,6 +49,13 @@ def task_2_1():
     #####################
 
     mean, pcs, pc_weights = task2.train_statistical_shape_model(kpts)
+    # print("AAAAA" * 6)
+    # print(mean)
+    # print("AAAAA" * 6)
+    # print(pcs)
+    # print("AAAAA" * 6)
+    # print(pc_weights)
+    # print("AAAAA" * 6)
 
     return mean, pcs, pc_weights
 
@@ -66,10 +73,10 @@ if __name__ == '__main__':
     print("Running Task 1")
     # print(task_1())
     # print(task_1().shape)
-    task_1()
+    # task_1()
 
     # print("Running Task 2.1")
-    # mean, pcs, pc_weights = task_2_1()
+    mean, pcs, pc_weights = task_2_1()
 
     # print("Running Task 2.2")
     # task_2_2(mean, pcs, pc_weights)
