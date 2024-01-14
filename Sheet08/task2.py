@@ -13,6 +13,8 @@ def ppca(covariance, preservation_ratio=0.9):
     covariance_matrix = create_covariance_matrix(covariance, mean_shape)
 
     print("Covariance: \n", covariance_matrix)
+    print("Covariance Shape: \n", covariance_matrix.shape)
+    print
 
 
     # Perform SVD
@@ -30,10 +32,10 @@ def ppca(covariance, preservation_ratio=0.9):
     print(pcs)
     # Calculate the variance
     D = covariance_matrix.shape[1]
-    sigma_hat_square = np.sum(s[n_components:]**2) / (D - n_components)
+    sigma_hat_square = np.sum(s[n_components:]) / (D - n_components)
 
     # Calculate the weights
-    pc_weights = pcs * np.sqrt(s[:n_components]**2 - sigma_hat_square)
+    pc_weights = pcs * np.sqrt(s[:n_components] - sigma_hat_square)
 
     return pcs,sigma_hat_square, pc_weights
 
@@ -55,10 +57,10 @@ def create_covariance_matrix(kpts, mean_shape):
 
 def visualize_impact_of_pcs(mean, pcs, pc_weights):
     # your part here
-    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=5)
+    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=2)
     print("after")
     # get positive and negative weights 
-    v = np.sqrt(5)
+    v = 1
     positive_K_weights = pc_weights * v
     negative_K_wegihts = pc_weights * -v
     print("positive_K_weights")
