@@ -63,7 +63,8 @@ def task_2_2(mean, pcs, pc_weights):
     # ============= Load Data =================
 
     # Your part here
-
+    kpts = get_keypoints(hands_aligned_test)
+    
     task2.reconstruct_test_shape(kpts, mean, pcs, pc_weights)
 
     time.sleep(20)
@@ -78,8 +79,8 @@ if __name__ == '__main__':
     # print("Running Task 2.1")
     mean, pcs, pc_weights = task_2_1()
 
-    # print("Running Task 2.2")
-    # task_2_2(mean, pcs, pc_weights)
+    print("Running Task 2.2")
+    task_2_2(mean, pcs, pc_weights)
     # Orig Sol
 
     # print("Test")

@@ -108,5 +108,12 @@ def train_statistical_shape_model(kpts):
 
 # ======================= Reconstruct =======================
 def reconstruct_test_shape(kpts, mean, pcs, pc_weight):
-    #ToDo
-    pass
+    print("Hik: ", pc_weight)
+
+    weighted_pc = pcs * np.expand_dims(pc_weight, axis=1)
+    weighted_pc = np.sum(weighted_pc, axis=2)  # Sum along the last axis to get shape (112, 1)
+    # Now, weighted_pc has shape (112, 1)
+    X = kpts + weighted_pc.T + mean
+    utils.visualize_hands(utils.convert_samples_to_xy(X), "reconstruction")
+
+
