@@ -35,7 +35,7 @@ def ppca(covariance, preservation_ratio=0.9):
     sigma_hat_square = np.sum(s[n_components:]) / (D - n_components)
 
     # Calculate the weights
-    pc_weights = pcs * np.sqrt(s[:n_components] - sigma_hat_square)
+    pc_weights = pcs @ np.sqrt(s[:n_components] - sigma_hat_square * np.eye(n_components))
 
     return pcs,sigma_hat_square, pc_weights
 
@@ -69,16 +69,11 @@ def visualize_impact_of_pcs(mean, pcs, pc_weights):
     print(negative_K_wegihts)
 
     A = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=2)
-    utils.visualize_hands(utils.convert_samples_to_xy(A), "Mean with Sum of positive weighted PCs", delay=1)
+    utils.visualize_hands(utils.convert_samples_to_xy(A), "Mean with Sum of positive weighted PCs", delay=0.1)
 
-    # B = mean + np.expand_dims(np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=0), axis=0)
-    # utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=1)
+    B = mean + np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=0.1)
 
-    # A = mean + np.expand_dims(pcs * np.expand_dims(positive_K_weights, axis=1), axis=0)
-    # utils.visualize_hands(utils.convert_samples_to_xy(A[0]), "Difference between each positive weighted PCs", delay=.4)
-
-    # B = mean + np.expand_dims(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=0)
-    # utils.visualize_hands(utils.convert_samples_to_xy(B[0]), "Difference between each negative weighted PCs", delay=.4)
 
 
 
