@@ -53,9 +53,10 @@ def visualize_hands(kpts, title, delay=0.5, ax=None, clear=False):
     """
         kpts: shape keypoints with dim [num_samples x num_keypoints x 2]
     """
-    if ax is None:
+    if ax is None: 
+        print("None")
         fig = plt.figure(figsize=(5, 4))
-        # fig.canvas.set_window_title(title)
+        fig.canvas.set_window_title(title)
         fig.suptitle(title)
         ax = fig.add_subplot(111)
         ax.invert_yaxis()
