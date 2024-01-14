@@ -56,7 +56,8 @@ def visualize_hands(kpts, title, delay=0.5, ax=None, clear=False):
     if ax is None: 
         print("None")
         fig = plt.figure(figsize=(5, 4))
-        fig.canvas.set_window_title(title)
+        if hasattr(fig.canvas, 'set_window_title'):
+            fig.canvas.set_window_title(title)
         fig.suptitle(title)
         ax = fig.add_subplot(111)
         ax.invert_yaxis()

@@ -55,24 +55,28 @@ def create_covariance_matrix(kpts, mean_shape):
 
 def visualize_impact_of_pcs(mean, pcs, pc_weights):
     # your part here
-    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=10)
+    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=5)
     print("after")
     # get positive and negative weights 
     v = np.sqrt(5)
     positive_K_weights = pc_weights * v
     negative_K_wegihts = pc_weights * -v
+    print("positive_K_weights")
+    print(positive_K_weights)
+    print("negative_K_wegihts")
+    print(negative_K_wegihts)
 
-    A = mean + np.expand_dims(np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=0), axis=0)
+    A = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=2)
     utils.visualize_hands(utils.convert_samples_to_xy(A), "Mean with Sum of positive weighted PCs", delay=1)
 
-    B = mean + np.expand_dims(np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=0), axis=0)
-    utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=1)
+    # B = mean + np.expand_dims(np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=0), axis=0)
+    # utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=1)
 
-    A = mean + np.expand_dims(pcs * np.expand_dims(positive_K_weights, axis=1), axis=0)
-    utils.visualize_hands(utils.convert_samples_to_xy(A[0]), "Difference between each positive weighted PCs", delay=.4)
+    # A = mean + np.expand_dims(pcs * np.expand_dims(positive_K_weights, axis=1), axis=0)
+    # utils.visualize_hands(utils.convert_samples_to_xy(A[0]), "Difference between each positive weighted PCs", delay=.4)
 
-    B = mean + np.expand_dims(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=0)
-    utils.visualize_hands(utils.convert_samples_to_xy(B[0]), "Difference between each negative weighted PCs", delay=.4)
+    # B = mean + np.expand_dims(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=0)
+    # utils.visualize_hands(utils.convert_samples_to_xy(B[0]), "Difference between each negative weighted PCs", delay=.4)
 
 
 
