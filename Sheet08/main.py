@@ -74,7 +74,7 @@ if __name__ == '__main__':
     print("Running Task 1")
     # print(task_1())
     # print(task_1().shape)
-    # task_1()
+    task_1()
 
     # print("Running Task 2.1")
     mean, pcs, pc_weights = task_2_1()

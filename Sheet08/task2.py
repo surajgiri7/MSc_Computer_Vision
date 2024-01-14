@@ -57,7 +57,7 @@ def create_covariance_matrix(kpts, mean_shape):
 
 def visualize_impact_of_pcs(mean, pcs, pc_weights):
     # your part here
-    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "Mean Mu", delay=2)
     print("after")
     # get positive and negative weights 
     v = 1
@@ -68,11 +68,12 @@ def visualize_impact_of_pcs(mean, pcs, pc_weights):
     print("negative_K_wegihts")
     print(negative_K_wegihts)
 
-    A = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=2)
-    utils.visualize_hands(utils.convert_samples_to_xy(A), "Mean with Sum of positive weighted PCs", delay=0.1)
+    mean_with_sum_positive = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=2)
+    # mean_with_sum_positive = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=0)
+    utils.visualize_hands(utils.convert_samples_to_xy(mean_with_sum_positive), "Mean with Sum of positive weighted PCs", delay=0.1)
 
-    B = mean + np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=2)
-    utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=0.1)
+    mean_with_sum_negative = mean + np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(mean_with_sum_negative), "Mean with Sum of negative weighted PCs", delay=0.1)
 
 
 
