@@ -1,0 +1,371 @@
+h_cap = argmax_h[max_psi[sum from 1 to N (-1/sigma^2)*(dist[x_i, trans[mu_n + phi_n*h, psi]])^2] + log[Norm_h[0,I]]]
+
+=========================================================
+=========================================================
+
+
+
+import numpy as np
+import utils
+
+# ======================= PPCA =======================
+def ppca(covariance, preservation_ratio=0.9):
+
+    # Happy Coding! :)
+
+    mean_shape = np.mean(covariance, axis=0)
+    print("Mean Shape: \n", mean_shape)
+
+    # Calculate the covariance matrix
+    covariance_matrix = create_covariance_matrix(covariance, mean_shape)
+
+    print("Covariance: \n", covariance_matrix)
+    print("Covariance Shape: \n", covariance_matrix.shape)
+    print
+
+
+    # Perform SVD
+    U, s, Vt = np.linalg.svd(covariance_matrix.T @ covariance_matrix)
+    print("L^2")
+    print(s)
+
+    # Select the minimum number of principal components preserving 90% of the energy
+    n_components = np.where(np.cumsum(s / np.sum(s)) >= preservation_ratio)[0][0] + 1 # +1 because of zero indexing
+    print("n_components: \n", n_components)
+
+    # Calculate the principal components
+    pcs = U[:, :n_components]
+    print("pcs matrix") 
+    print(pcs)
+    # Calculate the variance
+    D = covariance_matrix.shape[1]
+    sigma_hat_square = np.sum(s[n_components:]) / (D - n_components)
+
+    # Calculate the weights
+    pc_weights = pcs @ np.sqrt(s[:n_components] - sigma_hat_square * np.eye(n_components))
+    # pc_weights = pcs * np.sqrt(s[:n_components] - sigma_hat_square)
+
+    return pcs,sigma_hat_square, pc_weights
+
+
+
+
+# ======================= Covariance =======================
+
+def create_covariance_matrix(kpts, mean_shape):
+    # ToDO
+    W = kpts - mean_shape
+    return W
+
+
+
+
+
+# ======================= Visualization =======================
+
+def visualize_impact_of_pcs(mean, pcs, pc_weights):
+    # your part here
+    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=2)
+    print("after")
+    # get positive and negative weights 
+    v = 1
+    positive_K_weights = pc_weights * v
+    negative_K_wegihts = pc_weights * -v
+    print("positive_K_weights")
+    print(positive_K_weights)
+    print("negative_K_wegihts")
+    print(negative_K_wegihts)
+
+    A = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(A), "Mean with Sum of positive weighted PCs", delay=0.1)
+
+    B = mean + np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=0.1)
+
+
+
+
+
+
+
+# ======================= Training =======================
+def train_statistical_shape_model(kpts):
+    # Your code here 
+    print("kpts shape") 
+    print(kpts.shape)
+    mean_shape = np.mean(kpts, axis=0)
+    # print("Mean Shape: ", mean_shape)
+    # print("Mean Shape Shape: ", mean_shape.shape)
+    covariance = create_covariance_matrix(kpts, mean_shape)
+    # print("Covariance: ", covariance)
+    # print("Covariance Shape: ", covariance.shape)
+    pcs,sigma_sq, phi = ppca(kpts)
+    # print("Mean: \n", mean)
+    # print("pcs: \n", pcs)
+    # print("pc_weights: \n", pc_weights) 
+    print("sigma_sq") 
+    print(sigma_sq) 
+    print("phi") 
+    print(phi.shape) 
+    # visualize_impact_of_pcs(mean_shape,pcs, phi)  
+    return mean_shape, sigma_sq,phi
+    
+
+
+
+
+# ======================= Reconstruct =======================
+def reconstruct_test_shape(kpts, mean, pcs, pc_weight):
+    #ToDo
+    print("|||||" * 10)
+    print("kpts")
+    print(kpts.shape)
+    print(kpts)
+    print("mean")
+    print(mean.shape)
+    print(mean)
+    print("pcs")
+    print(pcs.shape)
+    print(pcs)
+    print("pc_weight")
+    print(pc_weight.shape)
+    print(pc_weight)
+    print("|||||" * 10)
+
+    print((kpts - mean).shape)
+
+    # hik = pc_weight
+    # print("hik")
+    # print(hik.shape)
+    # print(hik)
+
+    # print("||||||||" * 6)
+    # weighted_pcs = pcs * np.expand_dims(hik, axis=1)
+    # print("weighted_pcs")
+    # print(weighted_pcs)
+    # print(weighted_pcs.shape)
+    # print("||||||||" * 6)
+
+    # # w_test = mean + np.sum(weighted_pcs, axis=2)
+    # w_test = np.expand_dims(kpts.T, axis=1) + weighted_pcs
+    # print("w_test")
+    # print(w_test)
+    # print(w_test.shape)
+
+    # # Reshape w_test to have a regular shape
+    # w_test = np.reshape(w_test, (-1, w_test.shape[0]))
+
+    # utils.visualize_hands(utils.convert_samples_to_xy(w_test), "ReconShape", delay=0.1)
+
+    # rms_error = np.sqrt(np.mean((utils.convert_samples_to_xy(np.expand_dims(kpts.T, axis=1)) - w_test)**2))
+    # print("RMS error: ", rms_error)
+
+    # Express the test shape in terms of the generated model M
+    hik = pc_weight.T @ (kpts - mean).T
+    hik = hik.squeeze()
+    print("hik values: \n", hik)
+    print("hik shape: \n", hik.shape)
+
+    ###############
+    weighted_pc =pcs*np.expand_dims(pc_weight, axis=1)
+    print("Weighted PC: \n", weighted_pc)
+    print("Weighted PC Shape: \n", weighted_pc.shape)
+    X = np.expand_dims(kpts.T, axis=1) + weighted_pc
+    X = np.reshape(X, (-1, X.shape[-1]))
+    print("What is this?")
+    utils.visualize_hands(utils.convert_samples_to_xy(X), "reconstruction")
+
+    ###############
+
+    # # Reconstruct the test shape
+    # w_test = mean + pc_weight @ hik
+    # print("w_test shape: \n", w_test.shape)
+    # print("w_test values: \n", w_test)
+
+    # # Visualize the original and the reconstructed shapes
+    # # utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(kpts, axis=0)), "Original Shape", delay=1)
+    # utils.visualize_hands(utils.convert_samples_to_xy(w_test), "Reconstructed", delay=0.1)
+
+    # # utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(w_test, axis=1)), "Reconstructed Shape", delay=1)
+
+    # # Calculate the RMS error between both shapes
+    # rms_error = np.sqrt(np.mean((kpts - w_test)**2))
+    # print("RMS error: ", rms_error)
+    pass
+
+
+=========================================================
+=========================================================
+
+import numpy as np
+import utils
+
+# ======================= PPCA =======================
+def ppca(covariance, preservation_ratio=0.9):
+
+    # Happy Coding! :)
+
+    mean_shape = np.mean(covariance, axis=0)
+    print("Mean Shape: \n", mean_shape)
+
+    # Calculate the covariance matrix
+    covariance_matrix = create_covariance_matrix(covariance, mean_shape)
+
+    print("Covariance: \n", covariance_matrix)
+    print("Covariance Shape: \n", covariance_matrix.shape)
+    print
+
+
+    # Perform SVD
+    U, s, Vt = np.linalg.svd(covariance_matrix.T @ covariance_matrix)
+    print("L^2")
+    print(s)
+
+    # Select the minimum number of principal components preserving 90% of the energy
+    n_components = np.where(np.cumsum(s / np.sum(s)) >= preservation_ratio)[0][0] + 1 # +1 because of zero indexing
+    print("n_components: \n", n_components)
+
+    # Calculate the principal components
+    pcs = U[:, :n_components]
+    print("pcs matrix") 
+    print(pcs)
+    # Calculate the variance
+    D = covariance_matrix.shape[1]
+    sigma_hat_square = np.sum(s[n_components:]) / (D - n_components)
+
+    # Calculate the weights
+    pc_weights = pcs @ np.sqrt(s[:n_components] - sigma_hat_square * np.eye(n_components))
+
+    return pcs,sigma_hat_square, pc_weights
+
+
+
+
+# ======================= Covariance =======================
+
+def create_covariance_matrix(kpts, mean_shape):
+    # ToDO
+    W = kpts - mean_shape
+    return W
+
+
+
+
+
+# ======================= Visualization =======================
+
+def visualize_impact_of_pcs(mean, pcs, pc_weights):
+    # your part here
+    utils.visualize_hands(utils.convert_samples_to_xy(np.expand_dims(mean, axis=0)), "mean", delay=2)
+    print("after")
+    # get positive and negative weights 
+    v = 1
+    positive_K_weights = pc_weights * v
+    negative_K_wegihts = pc_weights * -v
+    print("positive_K_weights")
+    print(positive_K_weights)
+    print("negative_K_wegihts")
+    print(negative_K_wegihts)
+
+    A = mean + np.sum(pcs * np.expand_dims(positive_K_weights, axis=1), axis=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(A), "Mean with Sum of positive weighted PCs", delay=0.1)
+
+    B = mean + np.sum(pcs * np.expand_dims(negative_K_wegihts, axis=1), axis=2)
+    utils.visualize_hands(utils.convert_samples_to_xy(B), "Mean with Sum of negative weighted PCs", delay=0.1)
+
+
+
+
+
+
+
+# ======================= Training =======================
+def train_statistical_shape_model(kpts):
+    # Your code here 
+    print("kpts shape") 
+    print(kpts.shape)
+    mean_shape = np.mean(kpts, axis=0)
+    # print("Mean Shape: ", mean_shape)
+    # print("Mean Shape Shape: ", mean_shape.shape)
+    covariance = create_covariance_matrix(kpts, mean_shape)
+    # print("Covariance: ", covariance)
+    # print("Covariance Shape: ", covariance.shape)
+    pcs,sigma_sq, phi = ppca(kpts)
+    # print("Mean: \n", mean)
+    # print("pcs: \n", pcs)
+    # print("pc_weights: \n", pc_weights) 
+    print("sigma_sq") 
+    print(sigma_sq) 
+    print("phi") 
+    print(phi.shape) 
+    # visualize_impact_of_pcs(mean_shape,pcs, phi)  
+    return mean_shape, sigma_sq,phi
+    
+
+# ======================= Reconstruct =======================
+def reconstruct_test_shape(kpts, mean, pcs, pc_weight):
+    #ToDo
+    print("|||||" * 10)
+    print("kpts")
+    print(kpts.shape)
+    print(kpts)
+    print("mean")
+    print(mean.shape)
+    print(mean)
+    print("pcs")
+    print(pcs.shape)
+    print(pcs)
+    print("pc_weight")
+    print(pc_weight.shape)
+    print(pc_weight)
+    print("|||||" * 10)
+
+    print((kpts - mean).shape)
+
+    # Express the test shape in terms of the generated model M
+    hik = pc_weight.T @ (kpts - mean).T
+    hik = hik.squeeze()
+    print("hik values: \n", hik)
+    print("hik shape: \n", hik.shape)
+
+    ###############
+    weighted_pc =pcs*np.expand_dims(pc_weight, axis=1)
+    print("Weighted PC: \n", weighted_pc)
+    print("Weighted PC Shape: \n", weighted_pc.shape)
+    X = np.expand_dims(kpts.T, axis=1) + weighted_pc
+    X = np.reshape(X, (-1, X.shape[-1]))
+    print("What is this?")
+    utils.visualize_hands(utils.convert_samples_to_xy(X), "reconstruction")
+
+    pass
+
+
+# def reconstruct_test_shape(kpts, mean, pcs, pc_weight):
+#     N = kpts.shape[1] / 2
+#     print("N: \n", N)
+
+#     # Number of principal components
+#     K = pc_weight.shape[0]
+
+#     # Reshape pc_weight and pcs to 2D arrays
+#     pc_weight = np.expand_dims(pc_weight, axis=0)
+#     # pcs = np.expand_dims(pcs, axis=0)
+
+#     # Calculate the terms inside the argmax
+#     dist_terms = np.sum((-1 / pc_weight**2) * np.square(np.linalg.norm(kpts - mean - pc_weight @ pcs * np.eye(K), axis=2)), axis=1)
+
+#     # Calculate the log likelihood term
+#     log_likelihood = -(N / 2) * np.log(2 * np.pi * pc_weight**2)
+
+#     # Calculate the final term to be maximized
+#     max_psi = dist_terms + log_likelihood
+
+#     # The final reconstructed shape
+#     h_cap = pc_weight.T @ np.linalg.inv(np.eye(K) * pc_weight**2) @ (kpts - mean).T
+
+#     return h_cap
+
+
+=========================================================
+=========================================================
+
