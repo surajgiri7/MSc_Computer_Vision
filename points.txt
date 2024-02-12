@@ -1,0 +1,25 @@
+Sheet 0: 5/5
+Sheet 1: 16/20
+Sheet 2: 13/20
+Sheet 3: 11.5/20
+    Task 1.a:
+    1.5/2 Please don't use magic numbers inside the script. No horizontal lines!
+    
+    Task 1.b:
+    2.5/3 Improve visualization of the accumulator.
+    
+    Task 2:
+    2.5/3 please improve your handwriting when you write a proof.
+    
+    Task 3: 3/5
+        a intensity is required (gray scale)
+        d no solution
+    
+    Task 4: 2/7
+        a 2/5 not complete
+        b 0/2
+Sheet 4: 12/20 Task 1, incorrect calculation of eigenvector, cut cost and cluster results.
+Sheet 5: 16.8/20
+Sheet 6: 13/15
+Sheet 5: 13/20
+Sheet 8: 13/20
